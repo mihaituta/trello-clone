@@ -28,9 +28,10 @@ export default defineComponent({
   setup() {
     const store = useStore()
     const router = useRouter()
+
     return {
       goToBoard: (board) => {
-        store.commit('boards/setCurrentBoard', board)
+        store.commit('boards/setCurrentBoard', {board})
         router.push({name: 'board', params: {slug: board.slug}});
       },
       boards: computed(() => store.getters["boards/boards"]),

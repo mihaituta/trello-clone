@@ -159,6 +159,9 @@ const actions = {
           })
           dispatch('boards/getAllBoards', null, {root: true})
           dispatch('boards/boardsListener', null, {root: true})
+          if (this.$router.currentRoute.value.name === 'auth') {
+            await this.$router.push('/')
+          }
         } catch (err) {
           console.log(err)
         }

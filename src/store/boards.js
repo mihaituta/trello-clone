@@ -2,6 +2,9 @@ import {
   fbDB,
   collection,
   query,
+  where,
+  doc,
+  getDoc,
   getDocs,
   onSnapshot
 } from 'boot/firebase'
@@ -20,12 +23,16 @@ const mutations = {
     state.boards = payload;
   },
   setCurrentBoard(state, payload) {
-    state.currentBoard = payload
+    if (payload.board) {
+      state.currentBoard = payload.board
+    } else if (payload.slug) {
+      state.currentBoard = state.boards.find(board => board.slug === payload.slug)
+    }
   }
 }
 
 const actions = {
-  async getAllBoards({commit, rootGetters}) {
+  async getAllBoards({commit, state, rootGetters}) {
     const userId = rootGetters['mainStore/user'].userId
     const boardsQuery = query(collection(fbDB, `users/${userId}/boards`));
     try {
@@ -42,7 +49,9 @@ const actions = {
         }
         boards.unshift(temp)
       });
-      await commit('setBoards', boards)
+      commit('setBoards', boards)
+      if (this.$router.currentRoute.value.name === 'board')
+        commit('setCurrentBoard', {slug: this.$router.currentRoute.value.params.slug})
     } catch (e) {
       console.log(e.message)
     }
@@ -80,9 +89,21 @@ const actions = {
     commit('setBoardsListener', boardsListener)
   },
 
-  /*  setCurrentBoard({commit}) {
+  async getCurrentBoard({state, commit, rootGetters}, payload) {
+    const userId = rootGetters['mainStore/user'].userId
+    console.log(userId)
+    const boardQuery = query(collection(fbDB, `users/${userId}/boards`), where('slug', '==', payload));
 
-    },*/
+    const docSnap = await getDoc(boardQuery);
+
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+      commit('setCurrentBoard', docSnap.data())
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("No such document!");
+    }
+  },
 
   unsubBoardsListener({state}) {
     state.boardsListener()

@@ -1,7 +1,7 @@
 <template>
   <q-layout
     view="hhh lpR fFf"
-    v-bind:style="{backgroundColor:  currentBoard.color}"
+    v-bind:style="{backgroundColor: currentBoard ? currentBoard.color : '#fff'}"
   >
     <q-header
       class="text-white"
@@ -116,37 +116,35 @@ export default {
       miniState.value = true
     })
 
+    const boards = computed(() => store.getters["boards/boards"])
+    const user = computed(() => store.getters["mainStore/user"])
+
     return {
       drawer: ref(false),
       miniState,
       expended,
+      boards,
+      user,
 
       logoutUser: () => store.dispatch('mainStore/logoutUser'),
 
       goToBoard: (board) => {
-        store.commit('boards/setCurrentBoard', board)
         router.push({name: 'board', params: {slug: board.slug}});
+        store.commit('boards/setCurrentBoard', {board})
       },
 
       drawerClick: (e) => {
-        // if in "mini" state and user
-        // click on drawer, we switch it to "normal" mode
         if (miniState.value) {
           miniState.value = false
           e.stopPropagation()
         }
       },
 
-      layoutBackgroundColor: computed(() => {
-        // return '#F5F5F5'
-      }),
       headerColor: computed(() => {
         if (route.name === 'home')
           return getCssVar('primary')
       }),
       currentBoard: computed(() => store.getters['boards/currentBoard']),
-      boards: computed(() => store.getters["boards/boards"]),
-      user: computed(() => store.getters["mainStore/user"]),
     }
   }
 }
