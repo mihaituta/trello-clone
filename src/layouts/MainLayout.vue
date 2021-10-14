@@ -1,21 +1,35 @@
 <template>
-  <q-layout view="hhh lpR fFf" class="bg-teal-3">
-
-    <q-header class="text-white">
+  <q-layout
+    view="hhh lpR fFf"
+    v-bind:style="{backgroundColor:  currentBoard.color}"
+  >
+    <q-header
+      class="text-white"
+      v-bind:style="{backgroundColor: headerColor}"
+    >
       <q-toolbar>
-        <q-toolbar-title>
-          <RouterLink to="/" class="link flex items-center q-electron-drag--exception">
-            <div class="logo"></div>
+        <q-toolbar-title shrink>
+          <RouterLink to="/" class="link">
+            <div class="logo"/>
           </RouterLink>
         </q-toolbar-title>
+
+        <q-space/>
+        <q-btn
+          size="lg"
+          flat
+          icon="logout"
+          label="Logout"
+          @click="logoutUser"
+        />
       </q-toolbar>
     </q-header>
 
     <q-drawer
       behavior="desktop"
       class="drawer"
-      mini-width="48"
-      width="260"
+      :mini-width="48"
+      :width="260"
       no-swipe-open
       no-swipe-backdrop
       no-swipe-close
@@ -27,18 +41,18 @@
       @click.capture="drawerClick"
     >
       <div v-if="miniState" class="drawer-closed-content row justify-center q-mt-sm">
-        <div class="name-letter q-mb-md">T</div>
+        <div class="name-letter q-mb-md">{{ String(user.name).charAt(0).toUpperCase() }}</div>
         <q-icon size="sm" name="keyboard_double_arrow_right"/>
       </div>
 
       <q-list v-else>
         <q-item class="no-padding" @click=" ">
           <q-item-section class="flex items-center q-pr-none q-ml-sm" side>
-            <div class="name-letter">T</div>
+            <div class="name-letter">{{ String(user.name).charAt(0).toUpperCase() }}</div>
           </q-item-section>
 
-          <q-item-section class="q-pl-sm text-weight-bold text-grey-8">
-            <q-item-label>Tuta Mihai's Workspace</q-item-label>
+          <q-item-section class="q-pl-sm text-weight-bold text-grey-8 text-capitalize">
+            <q-item-label>{{ user.name }}'s Workspace</q-item-label>
           </q-item-section>
 
           <q-item-section side>
@@ -60,23 +74,19 @@
             <q-btn style="width: 0.5rem; font-size: 0.8rem" flat icon="add" color="grey-6" @click=""/>
           </template>
 
-          <q-item class="board" dense clickable v-ripple>
-            <q-item-label class="flex items-center">
-              <div class="q-mr-sm board-color"/>
-              Weight Tracker App
-            </q-item-label>
-          </q-item>
+          <q-list v-for="board in boards">
+            <q-item class="board" dense clickable v-ripple @click="goToBoard(board)">
+              <q-item-label class="flex items-center">
+                <div
+                  class="q-mr-sm board-color"
+                  v-bind:style="{backgroundColor: board.color}"/>
+                {{ board.name }}
+              </q-item-label>
+            </q-item>
+          </q-list>
 
-          <q-item class="=board" dense clickable v-ripple>
-            <q-item-label class="flex items-center">
-              <div class="q-mr-sm board-color"/>
-              Trello clone
-            </q-item-label>
-          </q-item>
         </q-expansion-item>
-
       </q-list>
-
     </q-drawer>
 
     <q-page-container>
@@ -87,48 +97,73 @@
 </template>
 
 <script>
-import {ref} from 'vue'
+import {ref, computed, onBeforeUpdate} from 'vue'
+import {useStore} from 'vuex'
+import {useRoute, useRouter} from 'vue-router'
+import {getCssVar} from 'quasar'
 
 export default {
+
   setup() {
+    const store = useStore()
+    const route = useRoute()
+    const router = useRouter()
+
     const miniState = ref(true)
     const expended = ref(true)
-    // const miniState = ref(true)
+
+    onBeforeUpdate(() => {
+      miniState.value = true
+    })
 
     return {
       drawer: ref(false),
       miniState,
       expended,
 
-      drawerClick(e) {
+      logoutUser: () => store.dispatch('mainStore/logoutUser'),
+
+      goToBoard: (board) => {
+        store.commit('boards/setCurrentBoard', board)
+        router.push({name: 'board', params: {slug: board.slug}});
+      },
+
+      drawerClick: (e) => {
         // if in "mini" state and user
         // click on drawer, we switch it to "normal" mode
         if (miniState.value) {
           miniState.value = false
-
-          // notice we have registered an event with capture flag;
-          // we need to stop further propagation as this click is
-          // intended for switching drawer to "normal" mode only
           e.stopPropagation()
         }
-      }
+      },
+
+      layoutBackgroundColor: computed(() => {
+        // return '#F5F5F5'
+      }),
+      headerColor: computed(() => {
+        if (route.name === 'home')
+          return getCssVar('primary')
+      }),
+      currentBoard: computed(() => store.getters['boards/currentBoard']),
+      boards: computed(() => store.getters["boards/boards"]),
+      user: computed(() => store.getters["mainStore/user"]),
     }
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+.q-layout {
+  background-color: $grey-2;
+}
+
 .q-header {
+  backdrop-filter: blur(24px);
   background-color: rgba(0, 0, 0, 0.45);
 
   .q-toolbar {
     padding-left: 0.7rem;
     height: 0.5rem;
-
-    .q-toolbar-title {
-      display: flex;
-      align-items: center;
-    }
 
     img {
       width: 1rem;
@@ -136,7 +171,7 @@ export default {
     }
 
     .logo {
-      width: 90px;
+      width: 100px;
       height: 20px;
       background-image: url("../assets/logo.png");
       background-repeat: no-repeat;
@@ -149,11 +184,9 @@ export default {
       }
     }
   }
-
-
 }
 
-.q-drawer {
+::v-deep(.q-drawer) {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
   transition: background-color 0.3s;
   box-shadow: 1px 0 0 rgb(9 30 66 / 8%);
@@ -188,17 +221,16 @@ export default {
   .board-color {
     width: 1.5rem;
     height: 1.2rem;
-    background-color: red;
     border-radius: 2px;
   }
 
   .opened {
-    background-color: white;
+    background-color: $grey-2;
     cursor: default;
   }
 
   &:hover {
-    background: white;
+    background: $grey-2;
     color: black;
     cursor: pointer;
   }
