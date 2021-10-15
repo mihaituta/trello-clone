@@ -3,11 +3,17 @@ import {
   collection,
   query,
   where,
+  addDoc,
+  setDoc,
+  updateDoc,
   doc,
   getDoc,
   getDocs,
   onSnapshot
 } from 'boot/firebase'
+import {Notify} from 'quasar'
+
+const slugify = require('slugify')
 
 const state = {
   currentBoard: {},
@@ -22,12 +28,23 @@ const mutations = {
   setBoards(state, payload) {
     state.boards = payload;
   },
+  updateBoard(state, payload) {
+    // find the board in array and replace it with the new one
+    state.boards = [...state.boards.map(item => item.id !== payload.id ? item : {...item, ...payload})]
+  },
+  deleteBoard(state, board_id) {
+    const boardToDelete = state.boards.findIndex(item => item.id === board_id);
+    state.boards.splice(boardToDelete, 1)
+  },
   setCurrentBoard(state, payload) {
     if (payload.board) {
       state.currentBoard = payload.board
     } else if (payload.slug) {
       state.currentBoard = state.boards.find(board => board.slug === payload.slug)
     }
+  },
+  addBoard(state, payload) {
+    state.boards.push(payload)
   }
 }
 
@@ -78,7 +95,8 @@ const actions = {
             if (change.type === 'added') {
               commit('addBoard', data)
             } else if (change.type === 'modified') {
-              commit('updateBoard', {data, id})
+              commit('updateBoard', data)
+              commit('setCurrentBoard', {board: data})
             } else if (change.type === 'removed') {
               commit('deleteBoard', id);
             }
@@ -91,7 +109,6 @@ const actions = {
 
   async getCurrentBoard({state, commit, rootGetters}, payload) {
     const userId = rootGetters['mainStore/user'].userId
-    console.log(userId)
     const boardQuery = query(collection(fbDB, `users/${userId}/boards`), where('slug', '==', payload));
 
     const docSnap = await getDoc(boardQuery);
@@ -102,6 +119,57 @@ const actions = {
     } else {
       // doc.data() will be undefined in this case
       console.log("No such document!");
+    }
+  },
+
+  async addBoard({state, commit, rootGetters}, payload) {
+    const userId = rootGetters['mainStore/user'].userId
+    const slug = slugify(payload.name).toLowerCase()
+    const boardsQuery = collection(fbDB, `users/${userId}/boards`);
+    try {
+      await addDoc(boardsQuery, {
+        name: payload.name,
+        color: payload.color,
+        slug
+      })
+      Notify.create({
+        progress: true,
+        type: 'positive',
+        color: 'secondary',
+        timeout: 2000,
+        position: 'top',
+        message: 'Board added successfully!'
+      })
+    } catch (e) {
+      console.log(e)
+      return e
+    }
+  },
+
+  async updateBoard({state, commit, rootGetters}, payload) {
+    const userId = rootGetters['mainStore/user'].userId
+    const slug = slugify(payload.name).toLowerCase()
+    const boardsQuery = doc(fbDB, `users/${userId}/boards`, payload.id);
+
+    try {
+      //if board does not exist, add it
+      await updateDoc(boardsQuery, {
+        name: payload.name,
+        slug
+      })
+
+      Notify.create({
+        progress: true,
+        type: 'positive',
+        color: 'secondary',
+        timeout: 2000,
+        position: 'top',
+        message: 'Name changed successfully!'
+      })
+
+    } catch (e) {
+      console.log(e)
+      return e
     }
   },
 

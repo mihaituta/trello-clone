@@ -71,7 +71,6 @@
             <q-item-section class="text-weight-bold">
               Your boards
             </q-item-section>
-            <q-btn style="width: 0.5rem; font-size: 0.8rem" flat icon="add" color="grey-6" @click=""/>
           </template>
 
           <q-list v-for="board in boards">
@@ -97,7 +96,7 @@
 </template>
 
 <script>
-import {ref, computed, onBeforeUpdate} from 'vue'
+import {ref, computed, onBeforeUpdate, watch} from 'vue'
 import {useStore} from 'vuex'
 import {useRoute, useRouter} from 'vue-router'
 import {getCssVar} from 'quasar'
@@ -116,6 +115,12 @@ export default {
       miniState.value = true
     })
 
+    // watch when the slug in the url changes and set the board in state accordingly
+    watch(() => route.params.slug, () => {
+      store.commit('boards/setCurrentBoard', {slug: route.params.slug})
+    });
+
+    const currentBoard = computed(() => store.getters['boards/currentBoard'])
     const boards = computed(() => store.getters["boards/boards"])
     const user = computed(() => store.getters["mainStore/user"])
 
@@ -125,12 +130,15 @@ export default {
       expended,
       boards,
       user,
+      currentBoard,
 
       logoutUser: () => store.dispatch('mainStore/logoutUser'),
 
       goToBoard: (board) => {
-        router.push({name: 'board', params: {slug: board.slug}});
-        store.commit('boards/setCurrentBoard', {board})
+        router.push({name: 'board', params: {slug: board.slug}}).then(() => {
+            store.commit('boards/setCurrentBoard', {board})
+          }
+        );
       },
 
       drawerClick: (e) => {
@@ -144,7 +152,6 @@ export default {
         if (route.name === 'home')
           return getCssVar('primary')
       }),
-      currentBoard: computed(() => store.getters['boards/currentBoard']),
     }
   }
 }
