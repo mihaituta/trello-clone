@@ -6,6 +6,7 @@ import {
   addDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -28,6 +29,9 @@ const mutations = {
   setBoards(state, payload) {
     state.boards = payload;
   },
+  addBoard(state, payload) {
+    state.boards.push(payload)
+  },
   updateBoard(state, payload) {
     // find the board in array and replace it with the new one
     state.boards = [...state.boards.map(item => item.id !== payload.id ? item : {...item, ...payload})]
@@ -43,13 +47,10 @@ const mutations = {
       state.currentBoard = state.boards.find(board => board.slug === payload.slug)
     }
   },
-  addBoard(state, payload) {
-    state.boards.push(payload)
-  }
 }
 
 const actions = {
-  async getAllBoards({commit, state, rootGetters}) {
+  async getAllBoards({commit, rootGetters}) {
     const userId = rootGetters['mainStore/user'].userId
     const boardsQuery = query(collection(fbDB, `users/${userId}/boards`));
     try {
@@ -122,7 +123,7 @@ const actions = {
     }
   },
 
-  async addBoard({state, commit, rootGetters}, payload) {
+  async addBoard({rootGetters}, payload) {
     const userId = rootGetters['mainStore/user'].userId
     const slug = slugify(payload.name).toLowerCase()
     const boardsQuery = collection(fbDB, `users/${userId}/boards`);
@@ -146,17 +147,26 @@ const actions = {
     }
   },
 
-  async updateBoard({state, commit, rootGetters}, payload) {
+  async updateBoard({rootGetters}, payload) {
     const userId = rootGetters['mainStore/user'].userId
-    const slug = slugify(payload.name).toLowerCase()
     const boardsQuery = doc(fbDB, `users/${userId}/boards`, payload.id);
+
+    let boardData = {}
+
+    if (payload.name) {
+      boardData = {
+        name: payload.name,
+        slug: slugify(payload.name).toLowerCase()
+      }
+    } else {
+      boardData = {
+        color: payload.color,
+      }
+    }
 
     try {
       //if board does not exist, add it
-      await updateDoc(boardsQuery, {
-        name: payload.name,
-        slug
-      })
+      await updateDoc(boardsQuery, boardData)
 
       Notify.create({
         progress: true,
@@ -164,12 +174,31 @@ const actions = {
         color: 'secondary',
         timeout: 2000,
         position: 'top',
-        message: 'Name changed successfully!'
+        message: 'Board updated successfully!'
       })
 
     } catch (e) {
       console.log(e)
       return e
+    }
+  },
+
+  async deleteBoard({rootGetters}, payload) {
+    const userId = rootGetters['mainStore/user'].userId
+    const boardsQuery = doc(fbDB, `users/${userId}/boards`, payload);
+    try {
+      deleteDoc(boardsQuery)
+      Notify.create({
+        progress: true,
+        type: 'positive',
+        color: 'secondary',
+        timeout: 2000,
+        position: 'top',
+        message: 'Board deleted successfully!'
+      })
+      await this.$router.replace('/')
+    } catch (e) {
+      console.log(e)
     }
   },
 

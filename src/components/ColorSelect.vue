@@ -1,32 +1,62 @@
 <template>
-  <q-dialog
-    @hide="onClose"
-    @before-show="onShow"
-    v-model="open">
-    <div>SMS</div>
-  </q-dialog>
+  <q-menu auto-close
+          :self="self"
+          :anchor="anchor"
+          :offset="offset"
+          :transition-show="transitionShow"
+          :transition-hide="transitionHide"
+          v-bind:style="{padding: padding, backgroundColor}"
+          style="
+            box-shadow: none;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(40px, 1fr));
+            gap: 0.5rem;">
+    <q-btn
+      v-for="color in colors"
+      :key="color"
+      @click="selectColor(color)"
+      v-bind:style="{backgroundColor: color}"
+    />
+  </q-menu>
 </template>
 
 <script>
-import {ref} from 'vue'
+import {computed} from 'vue'
+import {useStore} from "vuex";
 
 export default {
   props: {
-    open: {
-      required: true,
-      type: Boolean
+    padding: {
+      type: String
+    },
+    backgroundColor: {
+      type: String
+    },
+    offset: {
+      type: Array
+    },
+    self: {
+      type: String
+    },
+    anchor: {
+      type: String
+    },
+    transitionShow: {
+      type: String
+    },
+    transitionHide: {
+      type: String
     },
   },
-  emits: ['closeColorsModal', 'selectedColor'],
-
+  emits: ['updateColor'],
   setup(_, {emit}) {
-    const closeModal = () => emit('closeColorsModal')
+    const store = useStore()
     return {
-      onClose: () => closeModal(),
-
-      onShow: () => {
-        console.log('show')
+      selectColor: (color) => {
+        emit('updateColor', color)
       },
+
+      colors: computed(() => store.getters["mainStore/colors"]),
     }
   }
 }

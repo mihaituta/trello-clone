@@ -1,10 +1,5 @@
 <template>
   <q-page class="q-px-xl q-py-lg">
-<!--    <color-select
-      @closeColorsModal="closeColorsModal($event)"
-      :open="openModal"
-    />-->
-
     <div class="title">Your boards</div>
 
     <div class="boards-wrapper">
@@ -34,24 +29,14 @@
           >
           </q-input>
           <div class="board-color" v-bind:style="{backgroundColor: board.color}">
-            <q-menu auto-close
-                    :offset="[0, 8]"
-                    transition-show="jump-down"
-                    transition-hide="jump-up"
-                    style="
-                    background-color: transparent;
-                    box-shadow: none;
-                    display: grid;
-                    grid-template-columns: repeat(3, minmax(40px, 1fr));
-                    gap: 0.5rem;
-                    ">
-              <q-btn
-                v-for="color in colors"
-                :key="color"
-                @click="selectColor(color)"
-                v-bind:style="{backgroundColor: color}"
-              />
-            </q-menu>
+            <color-select
+              :offset="[0,8]"
+              anchor="bottom left"
+              self="top left"
+              transition-show="jump-down"
+              transition-hide="jump-up"
+              @updateColor="updateColor($event)"
+            />
           </div>
         </q-card-actions>
       </q-card>
@@ -81,20 +66,12 @@ export default defineComponent({
       board,
       openModal,
 
-      selectColor: (color) => {
+      updateColor: (color) => {
         board.color = color
       },
-      /*   closeColorsModal: () => {
-           openModal.value = false
-         },
-
-         openColorsMedal: () => {
-           openModal.value = true
-         },*/
 
       createBoard: () => {
-        store.dispatch('boards/addBoard', board).then((res) => {
-          console.log(res)
+        store.dispatch('boards/addBoard', board).then(() => {
           board.color = colors.value[0]
           board.name = ''
         })
