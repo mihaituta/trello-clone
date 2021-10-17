@@ -75,11 +75,9 @@
 
           <q-list v-for="board in boards">
             <q-item class="board" dense clickable v-ripple @click="goToBoard(board)">
-              <q-item-label class="flex items-center">
-                <div
-                  class="q-mr-sm board-color"
-                  v-bind:style="{backgroundColor: board.color}"/>
-                {{ board.name }}
+              <q-item-label class="flex no-wrap items-center">
+                <div class="q-mr-sm board-color" v-bind:style="{backgroundColor: board.color}"/>
+                <div class="board-name">{{ board.name }}</div>
               </q-item-label>
             </q-item>
           </q-list>
@@ -221,6 +219,13 @@ export default {
     text-align: center;
     justify-content: center;
     color: white;
+  }
+
+  .board-name {
+    flex: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .board-color {

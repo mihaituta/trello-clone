@@ -10,7 +10,7 @@ import {
   doc,
   getDoc,
   getDocs,
-  onSnapshot
+  onSnapshot, orderBy
 } from 'boot/firebase'
 import {Notify} from 'quasar'
 
@@ -36,6 +36,15 @@ const mutations = {
     // find the board in array and replace it with the new one
     state.boards = [...state.boards.map(item => item.id !== payload.id ? item : {...item, ...payload})]
   },
+  addList(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    board.lists.push(payload)
+  },
+  addCard(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const list = board.lists.find(list => list.id === payload.list_id)
+    list.cards.push(payload.card)
+  },
   deleteBoard(state, board_id) {
     const boardToDelete = state.boards.findIndex(item => item.id === board_id);
     state.boards.splice(boardToDelete, 1)
@@ -52,11 +61,13 @@ const mutations = {
 const actions = {
   async getAllBoards({commit, rootGetters}) {
     const userId = rootGetters['mainStore/user'].userId
-    const boardsQuery = query(collection(fbDB, `users/${userId}/boards`));
+    const boardsQuery = query(collection(fbDB, `users/${userId}/boards`), orderBy('date'));
+
     try {
       const snapshot = await getDocs(boardsQuery);
       const boards = []
-      await snapshot.forEach(doc => {
+
+      snapshot.forEach(doc => {
         let board = doc.data()
         const id = doc.id
         const temp = {
@@ -64,9 +75,45 @@ const actions = {
           name: board.name,
           slug: board.slug,
           color: board.color,
+          lists: board.lists
         }
-        boards.unshift(temp)
+        boards.push(temp)
       });
+
+      /* for (const board of boards) {
+         const listsQuery = query(collection(fbDB, `users/${userId}/boards/${board.id}/lists`));
+         const snapshot2 = await getDocs(listsQuery);
+
+         const boardIndex = boards.findIndex(e => e.name === board.name)
+
+         snapshot2.forEach(listDoc => {
+           const list = listDoc.data()
+           const id = listDoc.id
+           const temp = {
+             id,
+             name: list.name,
+             cards: []
+           }
+           // lists.unshift(temp)
+           boards[boardIndex].lists.push(temp)
+         })
+
+         for (const list of boards[boardIndex].lists) {
+           const cardsQuery = query(collection(fbDB, `users/${userId}/boards/${board.id}/lists/${list.id}/cards`));
+           const snapshot = await getDocs(cardsQuery);
+           snapshot.forEach(cardDoc => {
+             const card = cardDoc.data()
+             const id = cardDoc.id
+             const temp = {
+               id,
+               name: card.name,
+             }
+             const listIndex = boards[boardIndex].lists.findIndex(e => e.name === list.name)
+             boards[boardIndex].lists[listIndex].cards.push(temp)
+           })
+         }
+       }*/
+
       commit('setBoards', boards)
       if (this.$router.currentRoute.value.name === 'board')
         commit('setCurrentBoard', {slug: this.$router.currentRoute.value.params.slug})
@@ -75,7 +122,7 @@ const actions = {
     }
   },
 
-  async boardsListener({commit, rootGetters}) {
+  async boardsListener({commit, state, rootGetters}) {
     const userId = rootGetters['mainStore/user'].userId
     const boardsQuery = query(collection(fbDB, `users/${userId}/boards`));
     let initState = true
@@ -91,7 +138,8 @@ const actions = {
               id,
               name: board.name,
               slug: board.slug,
-              color: board.color
+              color: board.color,
+              lists: board.lists
             }
             if (change.type === 'added') {
               commit('addBoard', data)
@@ -108,27 +156,13 @@ const actions = {
     commit('setBoardsListener', boardsListener)
   },
 
-  async getCurrentBoard({state, commit, rootGetters}, payload) {
-    const userId = rootGetters['mainStore/user'].userId
-    const boardQuery = query(collection(fbDB, `users/${userId}/boards`), where('slug', '==', payload));
-
-    const docSnap = await getDoc(boardQuery);
-
-    if (docSnap.exists()) {
-      console.log("Document data:", docSnap.data());
-      commit('setCurrentBoard', docSnap.data())
-    } else {
-      // doc.data() will be undefined in this case
-      console.log("No such document!");
-    }
-  },
-
   async addBoard({rootGetters}, payload) {
     const userId = rootGetters['mainStore/user'].userId
     const slug = slugify(payload.name).toLowerCase()
     const boardsQuery = collection(fbDB, `users/${userId}/boards`);
     try {
       await addDoc(boardsQuery, {
+        date: new Date().toISOString(),
         name: payload.name,
         color: payload.color,
         slug
@@ -150,7 +184,6 @@ const actions = {
   async updateBoard({rootGetters}, payload) {
     const userId = rootGetters['mainStore/user'].userId
     const boardsQuery = doc(fbDB, `users/${userId}/boards`, payload.id);
-
     let boardData = {}
 
     if (payload.name) {
@@ -158,25 +191,18 @@ const actions = {
         name: payload.name,
         slug: slugify(payload.name).toLowerCase()
       }
-    } else {
+    } else if (payload.color) {
       boardData = {
         color: payload.color,
+      }
+    } else if (payload.lists) {
+      boardData = {
+        lists: payload.lists
       }
     }
 
     try {
-      //if board does not exist, add it
       await updateDoc(boardsQuery, boardData)
-
-      Notify.create({
-        progress: true,
-        type: 'positive',
-        color: 'secondary',
-        timeout: 2000,
-        position: 'top',
-        message: 'Board updated successfully!'
-      })
-
     } catch (e) {
       console.log(e)
       return e

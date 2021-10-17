@@ -5,9 +5,8 @@
           :offset="offset"
           :transition-show="transitionShow"
           :transition-hide="transitionHide"
-          v-bind:style="{padding: padding, backgroundColor}"
+          v-bind:style="{padding: padding, backgroundColor, boxShadow}"
           style="
-            box-shadow: none;
             display: grid;
             grid-template-columns: repeat(3, minmax(40px, 1fr));
             gap: 0.5rem;">
@@ -30,6 +29,9 @@ export default {
       type: String
     },
     backgroundColor: {
+      type: String
+    },
+    boxShadow: {
       type: String
     },
     offset: {

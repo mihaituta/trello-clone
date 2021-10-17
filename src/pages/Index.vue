@@ -10,7 +10,7 @@
         v-bind:style="{backgroundColor: board.color}"
         @click="goToBoard(board)"
       >
-        <q-card-section>
+        <q-card-section class="board-name">
           {{ board.name }}
         </q-card-section>
       </q-card>
@@ -35,6 +35,7 @@
               self="top left"
               transition-show="jump-down"
               transition-hide="jump-up"
+              boxShadow="none"
               @updateColor="updateColor($event)"
             />
           </div>
@@ -112,9 +113,16 @@ export default defineComponent({
     font-size: 1.3rem;
     color: $grey-2;
     min-width: 14rem;
+    max-width: 14rem;
     height: 7rem;
     margin-right: 1.5rem;
     margin-bottom: 1.5rem;
+
+    .board-name {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
   }
 
   .card-create {

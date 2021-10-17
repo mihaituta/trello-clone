@@ -16,7 +16,9 @@ import {
   runTransaction,
   writeBatch,
   limit,
-  where
+  where,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore'
 import {
   getAuth,
@@ -70,5 +72,7 @@ export {
   runTransaction,
   writeBatch,
   limit,
-  where
+  where,
+  arrayUnion,
+  arrayRemove
 }
