@@ -1,13 +1,17 @@
 <template>
   <div class="cards-wrapper q-mt-sm q-mx-sm">
     <q-card
+      class="list-card draggable-list shadow-0"
       draggable="true"
-      @dragenter="onDragEnter(list)"
-      @dragleave="onDragLeave"
-      @dragover="onDragOver"
-      @drop="onDrop(list)"
-      @dragstart="onDragStart(list)"
-      v-for="list in currentBoard.lists" class="list-card shadow-0">
+      @dragenter.prevent="onListEnter($event, list, index)"
+      @dragover.prevent="onListDragOver($event, list, index)"
+      @drop="onListDrop($event, index)"
+      @dragstart.self="onListDragStart($event, list, index)"
+      @dragend="onListDragEnd($event, list, index)"
+      @drag="onListDrag($event)"
+      v-for="(list, index) in currentBoard.lists"
+      :ref="el => listsRefs[index] = el"
+    >
       <q-card-section class="card-title flex items-center">
         {{ list.name }}
         <q-space/>
@@ -15,8 +19,20 @@
       </q-card-section>
 
       <q-card-section class="list-content q-py-none q-px-sm">
-
-        <cards :list="list"/>
+        <q-card
+          draggable="true"
+          @dragstart.self="onCardDragStart($event, list, index, card, cardIndex)"
+          @dragenter.prevent
+          @dragover.prevent="onCardDragOver($event, card, index, cardIndex)"
+          @dragend="onCardDragEnd($event,card,cardIndex)"
+          v-for="(card,cardIndex) in list.cards"
+          class="card shadow-1 draggable-card"
+          :ref="el => cardsRefs[cardIndex] = el">
+          <q-card-section class="card-content q-mb-sm">
+            {{ card.name }}
+          </q-card-section>
+        </q-card>
+        <cards draggable="true" @dragstart.prevent :list="list"/>
       </q-card-section>
     </q-card>
 
@@ -49,9 +65,8 @@
 </template>
 
 <script>
-import {ref, computed} from "vue";
+import {ref, reactive, computed} from "vue";
 import {useStore} from "vuex";
-import {arrayUnion} from "boot/firebase";
 import {v4 as uuidv4} from "uuid";
 
 export default {
@@ -60,15 +75,34 @@ export default {
     const addListInput = ref(null)
     const showMenu = ref(false)
     const listName = ref('')
+    const listsRefs = ref([])
+    const cardsRefs = ref([])
+
+    let moveCard = reactive({
+      card: {},
+      index: 0,
+      fromListIndex: 0,
+      toListIndex: 0,
+      targetCardIndex: 0
+    })
 
     const currentBoard = computed(() => store.getters["boards/currentBoard"])
 
-    return {
-      addListInput,
-      listName,
-      showMenu,
-      currentBoard,
+    const getDragAfterElement = function (container, y) {
+      const draggableElements = [...container.querySelectorAll('.draggable-card:not(.dragging)')]
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect()
+        console.log(child)
+        const offset = y - box.top - box.height / 2
+        if (offset < 0 && offset > closest.offset) {
+          return {offset: offset, element: child}
+        } else {
+          return closest
+        }
+      }, {offset: Number.NEGATIVE_INFINITY}).element
+    }
 
+    return {
       btnListMenu: () => {
         setTimeout(function () {
           addListInput.value.focus();
@@ -107,30 +141,146 @@ export default {
         }
       },
 
-      // store the id of the draggable element
-      onDragStart(list) {
-        // console.log('Started dragging ' + list.name)
+      onListDragStart(event, list, index) {
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.dropEffect = "move"
+        event.dataTransfer.setData('type', 'list')
+        event.dataTransfer.setData('fromListIndex', index)
+        const thisList = listsRefs.value[index].$el
+        // event.dataTransfer.setDragImage(new Image(), 0, 0)
+
+
+        /*       setTimeout(() => {
+                 // thisList.style.display = 'none'
+                 thisList.style.opacity = '0.7'
+                 // thisList.style.visibility = 'hidden'
+               }, 0)*/
+
+        /*      console.log(thisList.clientHeight)
+              console.log(thisList.clientWidth)*/
+        // console.log('Started dragging list: ' + list.name)
       },
 
-      onDragEnter(list) {
-        // don't drop on other draggables
-        // console.log('entering ' + list.name)
+      onListDrag(event) {
 
       },
 
-      onDragLeave(e) {
-        // console.log('leaving')
+      onListDragEnd(event, list, index) {
+        const thisList = listsRefs.value[index].$el
+        // thisList.style.display = 'block'
+        // thisList.style.opacity = '1'
+        // thisList.style.visibility = 'visible'
+
       },
 
-      onDragOver(e) {
-        // console.log('overr')
-        e.preventDefault()
+      onListDragOver(event, list, index) {
+        // const thisList = listsRefs.value[index].$el
+        /*
+                const thisCard = cardsRefs.value[moveCard.index].$el
+                const thisList = listsRefs.value[index].$el.lastElementChild.lastElementChild
+
+                console.log(thisCard)
+                thisList.before(thisCard)*/
+        const lastElem = listsRefs.value[index].$el.lastElementChild.lastElementChild
+        const lastElem2 = listsRefs.value[index].$el.lastElementChild
+        const thisList = listsRefs.value[index].$el
+
+        /*   const afterElement = getDragAfterElement(thisList, event.clientY)
+           const draggable = document.querySelector('.dragging')
+
+           if (afterElement == null) {
+             lastElem.before(draggable)
+           } else {
+             lastElem2.insertBefore(draggable, afterElement)
+           }*/
       },
 
-      onDrop(list) {
-        // console.log('drop on ' + list.name)
+      onListEnter(event, list, index) {
+        moveCard.targetCardIndex = list.cards.length
+      },
 
-      }
+      onListDrop(event, index) {
+        const elementToMove = event.dataTransfer.getData('type')
+        if (elementToMove === 'list') {
+          const toListIndex = index
+          const fromListIndex = event.dataTransfer.getData('fromListIndex')
+          store.commit('boards/moveList', {
+            fromListIndex: fromListIndex,
+            toListIndex: toListIndex,
+          })
+          store.dispatch('boards/updateBoard', {
+            lists: currentBoard.value.lists,
+            id: currentBoard.value.id
+          })
+        } else if (elementToMove === 'card') {
+          moveCard.toListIndex = index
+          store.commit('boards/moveCard', {
+            card: moveCard.card.value,
+            cardIndex: moveCard.index,
+            fromListIndex: moveCard.fromListIndex,
+            toListIndex: moveCard.toListIndex,
+            targetCardIndex: moveCard.targetCardIndex
+          })
+          store.dispatch('boards/updateBoard', {
+            lists: currentBoard.value.lists,
+            id: currentBoard.value.id
+          })
+          moveCard.value = {}
+        }
+      },
+
+      onCardDragStart(event, list, listIndex, card, cardIndex) {
+        event.dataTransfer.dropEffect = 'move'
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.setData('type', 'card')
+
+        moveCard.fromListIndex = listIndex
+        moveCard.card.value = card
+        moveCard.index = cardIndex
+
+        const thisCard = event.target
+        thisCard.classList.add('dragging')
+        // console.log(thisCard)
+        /* setTimeout(() => {
+           thisCard.style.display = 'none'
+           // thisCard.style.opacity = '0.7'
+           // thisCard.style.visibility = 'hidden'
+         }, 0)*/
+      },
+
+      onCardDragEnd(event, card, index) {
+        // const thisCard = cardsRefs.value[index].$el
+        const thisCard = event.target
+        thisCard.classList.remove('dragging')
+
+        // thisCard.style.display = 'block'
+        // thisCard.style.opacity = '0.7'
+        // thisCard.style.visibility = 'visible'
+      },
+
+      onCardDragOver(event, card, index, cardIndex) {
+        moveCard.targetCard = card
+        moveCard.targetCardIndex = cardIndex
+        // console.log(moveCard.targetCardIndex)
+
+        // const thisCard = event.target
+
+        event.preventDefault()
+      },
+
+      /*   onCardDrop(event, list, card, index) {
+           event.dataTransfer.setData('cardTarget', card)
+           // console.log(s)
+         }*/
+
+      addListInput,
+      listName,
+      showMenu,
+      currentBoard,
+      listsRefs,
+      cardsRefs,
+      moveCard,
+      getDragAfterElement
     }
   },
   components: {
@@ -215,11 +365,14 @@ export default {
   color: $grey-9;
   width: 15rem;
   min-width: 15rem;
-  height: auto;
   min-height: 5.1rem;
   margin-right: 0.5rem;
   border-radius: 3px;
   font-weight: bold;
+
+  &:hover {
+    cursor: pointer;
+  }
 
   .card-title {
     font-size: 1rem;
@@ -234,7 +387,32 @@ export default {
   }
 
   .list-content {
+    .card-content {
+      background-color: $grey-1;
+      font-weight: normal;
+      padding: 0.4rem;
+      cursor: move;
+      cursor: grab;
 
+      &:hover {
+        cursor: grab;
+        background-color: $grey-3;
+      }
+
+      &:active {
+        cursor: move;
+        cursor: grabbing;
+      }
+    }
   }
+}
+
+.dragging {
+
+}
+
+.cards-scroll {
+  height: auto;
+  max-height: 100%;
 }
 </style>

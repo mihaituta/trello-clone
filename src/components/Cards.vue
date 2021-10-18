@@ -1,18 +1,5 @@
 <template>
   <div>
-    <q-card
-      draggable="true"
-      @dragenter="onDragEnter(card)"
-      @dragleave="onDragLeave"
-      @dragover="onDragOver"
-      @drop="onDrop(card)"
-      @dragstart="onDragStart(card)"
-      v-for="card in list.cards" class="card shadow-1">
-      <q-card-section class="card-content q-mb-sm">
-        {{ card.name }}
-      </q-card-section>
-    </q-card>
-
     <q-btn v-if="!showAddMenu" dense unelevated class="btn-add-card q-mb-sm" label="Add a card" icon="add"
            @click.stop="showAddMenu = true"/>
     <div
@@ -21,7 +8,6 @@
       tabindex="0"
       @focusout="closeCardAddMenu"
     >
-      <!--      v-click-outside="closeCardAddMenu"-->
       <q-form @submit.stop="createCard">
         <q-card class="shadow-1">
           <q-input
@@ -32,6 +18,7 @@
             autogrow
             v-model="cardName"
             type="textarea"
+            @keydown.enter="createCard"
             placeholder="Enter a title for this card..."
           />
         </q-card>
@@ -110,31 +97,31 @@ export default {
         }
       },
 
-      // store the id of the draggable element
-      onDragStart(card) {
-        console.log('Started dragging ' + card.name)
-      },
+      /*     // store the id of the draggable element
+           onDragStart(card) {
+             console.log('Started dragging ' + card.name)
+           },
 
-      onDragEnter(card) {
-        // don't drop on other draggables
-        // console.log('entering ' + card.name)
+           onDragEnter(card) {
+             // don't drop on other draggables
+             // console.log('entering ' + card.name)
 
-      },
+           },
 
-      onDragLeave(e) {
-        // console.log('leaving')
+           onDragLeave(e) {
+             // console.log('leaving')
 
-      },
+           },
 
-      onDragOver(e) {
-        // console.log('overr')
-        e.preventDefault()
-      },
+           onDragOver(e) {
+             // console.log('overr')
+             e.preventDefault()
+           },
 
-      onDrop(card) {
-        console.log('drop on ' + card.name)
+           onDrop(card) {
+             console.log('drop on ' + card.name)
 
-      }
+           }*/
 
     }
   }
@@ -160,10 +147,7 @@ export default {
   }
 }
 
-.card-add-menu {
-
-}
-
+/*
 .card-content {
   background-color: $grey-1;
   font-weight: normal;
@@ -174,6 +158,7 @@ export default {
     background-color: $grey-3;
   }
 }
+*/
 
 ::v-deep(.card-textarea) {
   textarea {

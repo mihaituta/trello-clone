@@ -162,10 +162,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.scroll-area {
-  height: inherit;
-}
-
 .board-name {
   cursor: pointer;
   color: $grey-2;

@@ -45,6 +45,16 @@ const mutations = {
     const list = board.lists.find(list => list.id === payload.list_id)
     list.cards.push(payload.card)
   },
+  moveCard(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    board.lists[payload.fromListIndex].cards.splice(payload.cardIndex, 1)
+    board.lists[payload.toListIndex].cards.splice(payload.targetCardIndex, 0, payload.card)
+  },
+  moveList(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
+    board.lists.splice(payload.toListIndex, 0, listToMove)
+  },
   deleteBoard(state, board_id) {
     const boardToDelete = state.boards.findIndex(item => item.id === board_id);
     state.boards.splice(boardToDelete, 1)
