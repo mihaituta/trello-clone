@@ -82,7 +82,7 @@ const actions = {
             color: 'negative',
             timeout: 2000,
             position: 'top',
-            message: 'Email is taken!'
+            message: 'Email is already registered!'
           })
         }
       });
@@ -130,8 +130,6 @@ const actions = {
       })
       // this unsubscribes from the listener so it doesn't throw error because of firebase rules trying to listen for changes when there is no user authenticated
       dispatch('boards/unsubBoardsListener', null, {root: true})
-      // dispatch('lists/unsubListsListener', null, {root: true})
-      // dispatch('cards/unsubCardsListener', null, {root: true})
     }).catch((err) => {
       console.log(err.message)
       Notify.create({
@@ -173,6 +171,7 @@ const actions = {
         // User is logged out
         await this.$router.replace('/auth')
         commit('clearData')
+        commit('boards/clearBoardsData', null, {root: true})
       }
     })
   },

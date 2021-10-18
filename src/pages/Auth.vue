@@ -60,11 +60,10 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 8rem;
+  height: 6rem;
 
   img {
-    width: 15rem;
-    height: 3rem;
+    width: 12rem;
   }
 }
 
@@ -76,7 +75,7 @@ export default {
       min-height: 44rem;
 
       .q-tab-panels {
-        padding-top: 2.5rem;
+        padding-top: 1rem;
       }
     }
   }

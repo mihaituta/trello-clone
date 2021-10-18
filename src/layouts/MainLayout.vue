@@ -1,10 +1,10 @@
 <template>
   <q-layout
     view="hhh lpR fFf"
-    v-bind:style="{backgroundColor: currentBoard ? currentBoard.color : '#fff'}"
+    v-bind:style="{backgroundColor: currentBoard ? currentBoard.color : '#F5F5F5FF'}"
   >
     <q-header
-      class="text-white"
+      class="text-grey-2"
       v-bind:style="{backgroundColor: headerColor}"
     >
       <q-toolbar>
@@ -15,13 +15,7 @@
         </q-toolbar-title>
 
         <q-space/>
-        <q-btn
-          size="lg"
-          flat
-          icon="logout"
-          label="Logout"
-          @click="logoutUser"
-        />
+
       </q-toolbar>
     </q-header>
 
@@ -59,11 +53,12 @@
             <q-btn flat icon="keyboard_double_arrow_left" @click="miniState = true"/>
           </q-item-section>
         </q-item>
+
         <q-separator/>
 
         <q-expansion-item
           v-model="expended"
-          class="text-grey-7 q-mt-sm"
+          class="text-grey-7 q-my-sm"
           dense
           expand-icon-toggle
         >
@@ -83,6 +78,17 @@
           </q-list>
 
         </q-expansion-item>
+
+        <q-separator/>
+
+        <q-btn
+          class="btn-logout text-grey-7 q-mt-sm"
+          flat
+          icon="logout"
+          label="Logout"
+          @click="logoutUser"
+        />
+
       </q-list>
     </q-drawer>
 
@@ -156,10 +162,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.q-layout {
-  background-color: $grey-2;
+.q-layout{
+  background-color: #F5F5F5FF;
 }
-
 .q-header {
   backdrop-filter: blur(24px);
   background-color: rgba(0, 0, 0, 0.45);
@@ -243,6 +248,17 @@ export default {
     background: $grey-2;
     color: black;
     cursor: pointer;
+  }
+}
+
+::v-deep(.btn-logout) {
+  width: 100%;
+  align-items: start;
+  font-size: 0.8rem;
+
+  .on-left {
+    font-size: 1.4rem;
+    margin-right: 0.5rem;
   }
 }
 </style>

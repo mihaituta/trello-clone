@@ -1,22 +1,46 @@
-# Trello clone (trello-clone)
+<h1 align="center">
+  <img src="https://user-images.githubusercontent.com/41682806/137790836-c51c9bea-f6d0-4a63-a963-4bdae6d1f5f6.png"/><br/>
+</h1>
 
-A trello clone made by Mihai Tuță
+# Trello Clone
+A clone application I made after the popular website trello.
 
-## Install the dependencies
-```bash
+<a href="https://trello-clone-mt.netlify.app/" rel="noreferrer" target="_blank">Live demo</a>
+
+Demo account: **demo@gmail.com**, password: **123123**.
+<br>
+
+# Technologies
+- **HTML**
+- **CSS**
+- **Sass**
+- **JavaScript**
+- **Vue.js**
+- **Vuex**
+- **Quasar**
+- **Firebase**
+- Hosted on **Netlify**
+
+# Functionalities
+Users have to create an account to have their data saved in the database.
+
+The application has the main functionalities of Trello.
+
+- On the main page users can add, update, and delete boards.
+- Every board has lists, and every list has cards.
+- Users can reorder lists and cards, and can move cards from one list to another.
+- Every card can have a description, a color, and a checklist with items inside.
+
+# Installation
+
+**Install dependencies:**
+```
 npm install
 ```
-
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
+**Start local server:**
+```
 quasar dev
 ```
 
-
-### Build the app for production
-```bash
-quasar build
-```
-
-### Customize the configuration
-See [Configuring quasar.conf.js](https://v2.quasar.dev/quasar-cli/quasar-conf-js).
+## Contact
+tutamihai@gmail.com

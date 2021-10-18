@@ -40,6 +40,11 @@ const mutations = {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     board.lists.push(payload)
   },
+  moveList(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
+    board.lists.splice(payload.toListIndex, 0, listToMove)
+  },
   addCard(state, payload) {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     const list = board.lists.find(list => list.id === payload.list_id)
@@ -49,11 +54,6 @@ const mutations = {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     board.lists[payload.fromListIndex].cards.splice(payload.cardIndex, 1)
     board.lists[payload.toListIndex].cards.splice(payload.targetCardIndex, 0, payload.card)
-  },
-  moveList(state, payload) {
-    const board = state.boards.find(board => board.id === state.currentBoard.id)
-    const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
-    board.lists.splice(payload.toListIndex, 0, listToMove)
   },
   deleteBoard(state, board_id) {
     const boardToDelete = state.boards.findIndex(item => item.id === board_id);
@@ -66,6 +66,10 @@ const mutations = {
       state.currentBoard = state.boards.find(board => board.slug === payload.slug)
     }
   },
+  clearBoardsData(state) {
+    state.currentBoard = {};
+    state.boards = [];
+  }
 }
 
 const actions = {
@@ -89,40 +93,6 @@ const actions = {
         }
         boards.push(temp)
       });
-
-      /* for (const board of boards) {
-         const listsQuery = query(collection(fbDB, `users/${userId}/boards/${board.id}/lists`));
-         const snapshot2 = await getDocs(listsQuery);
-
-         const boardIndex = boards.findIndex(e => e.name === board.name)
-
-         snapshot2.forEach(listDoc => {
-           const list = listDoc.data()
-           const id = listDoc.id
-           const temp = {
-             id,
-             name: list.name,
-             cards: []
-           }
-           // lists.unshift(temp)
-           boards[boardIndex].lists.push(temp)
-         })
-
-         for (const list of boards[boardIndex].lists) {
-           const cardsQuery = query(collection(fbDB, `users/${userId}/boards/${board.id}/lists/${list.id}/cards`));
-           const snapshot = await getDocs(cardsQuery);
-           snapshot.forEach(cardDoc => {
-             const card = cardDoc.data()
-             const id = cardDoc.id
-             const temp = {
-               id,
-               name: card.name,
-             }
-             const listIndex = boards[boardIndex].lists.findIndex(e => e.name === list.name)
-             boards[boardIndex].lists[listIndex].cards.push(temp)
-           })
-         }
-       }*/
 
       commit('setBoards', boards)
       if (this.$router.currentRoute.value.name === 'board')

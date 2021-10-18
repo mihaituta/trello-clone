@@ -70,10 +70,6 @@ export default {
 
       createCard: () => {
         if (cardName.value !== '') {
-          /*   store.dispatch('cards/createCard', {
-               card: cardName.value,
-               list: props.list
-             })*/
 
           const card = {
             id: uuidv4(),
@@ -96,41 +92,12 @@ export default {
           addCardInput.value.focus();
         }
       },
-
-      /*     // store the id of the draggable element
-           onDragStart(card) {
-             console.log('Started dragging ' + card.name)
-           },
-
-           onDragEnter(card) {
-             // don't drop on other draggables
-             // console.log('entering ' + card.name)
-
-           },
-
-           onDragLeave(e) {
-             // console.log('leaving')
-
-           },
-
-           onDragOver(e) {
-             // console.log('overr')
-             e.preventDefault()
-           },
-
-           onDrop(card) {
-             console.log('drop on ' + card.name)
-
-           }*/
-
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-
-
 ::v-deep(.btn-add-card) {
   width: 100%;
   align-items: start;
@@ -146,19 +113,6 @@ export default {
     margin-right: 0.2rem;
   }
 }
-
-/*
-.card-content {
-  background-color: $grey-1;
-  font-weight: normal;
-  padding: 0.4rem;
-  cursor: pointer;
-
-  &:hover {
-    background-color: $grey-3;
-  }
-}
-*/
 
 ::v-deep(.card-textarea) {
   textarea {

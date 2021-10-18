@@ -3,12 +3,11 @@
     <q-card
       class="list-card draggable-list shadow-0"
       draggable="true"
-      @dragenter.prevent="onListEnter($event, list, index)"
-      @dragover.prevent="onListDragOver($event, list, index)"
-      @drop="onListDrop($event, index)"
       @dragstart.self="onListDragStart($event, list, index)"
       @dragend="onListDragEnd($event, list, index)"
-      @drag="onListDrag($event)"
+      @dragenter.prevent="onListEnter($event, list)"
+      @dragover.prevent
+      @drop="onListDrop($event, index)"
       v-for="(list, index) in currentBoard.lists"
       :ref="el => listsRefs[index] = el"
     >
@@ -21,10 +20,10 @@
       <q-card-section class="list-content q-py-none q-px-sm">
         <q-card
           draggable="true"
-          @dragstart.self="onCardDragStart($event, list, index, card, cardIndex)"
+          @dragstart.self="onCardDragStart($event, index, card, cardIndex)"
+          @dragend="onCardDragEnd($event)"
           @dragenter.prevent
-          @dragover.prevent="onCardDragOver($event, card, index, cardIndex)"
-          @dragend="onCardDragEnd($event,card,cardIndex)"
+          @dragover.prevent="onCardDragOver($event, cardIndex)"
           v-for="(card,cardIndex) in list.cards"
           class="card shadow-1 draggable-card"
           :ref="el => cardsRefs[cardIndex] = el">
@@ -79,7 +78,7 @@ export default {
     const cardsRefs = ref([])
 
     let moveCard = reactive({
-      card: {},
+      content: {},
       index: 0,
       fromListIndex: 0,
       toListIndex: 0,
@@ -87,20 +86,6 @@ export default {
     })
 
     const currentBoard = computed(() => store.getters["boards/currentBoard"])
-
-    const getDragAfterElement = function (container, y) {
-      const draggableElements = [...container.querySelectorAll('.draggable-card:not(.dragging)')]
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect()
-        console.log(child)
-        const offset = y - box.top - box.height / 2
-        if (offset < 0 && offset > closest.offset) {
-          return {offset: offset, element: child}
-        } else {
-          return closest
-        }
-      }, {offset: Number.NEGATIVE_INFINITY}).element
-    }
 
     return {
       btnListMenu: () => {
@@ -144,134 +129,83 @@ export default {
       onListDragStart(event, list, index) {
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = "move"
-        event.dataTransfer.setData('type', 'list')
+        event.dataTransfer.setData('elementPickedType', 'list')
         event.dataTransfer.setData('fromListIndex', index)
         const thisList = listsRefs.value[index].$el
-        // event.dataTransfer.setDragImage(new Image(), 0, 0)
 
-
-        /*       setTimeout(() => {
-                 // thisList.style.display = 'none'
-                 thisList.style.opacity = '0.7'
-                 // thisList.style.visibility = 'hidden'
-               }, 0)*/
-
-        /*      console.log(thisList.clientHeight)
-              console.log(thisList.clientWidth)*/
-        // console.log('Started dragging list: ' + list.name)
-      },
-
-      onListDrag(event) {
-
+        setTimeout(() => thisList.style.opacity = '0', 0)
       },
 
       onListDragEnd(event, list, index) {
         const thisList = listsRefs.value[index].$el
-        // thisList.style.display = 'block'
-        // thisList.style.opacity = '1'
-        // thisList.style.visibility = 'visible'
-
+        thisList.style.opacity = '1'
       },
 
-      onListDragOver(event, list, index) {
-        // const thisList = listsRefs.value[index].$el
-        /*
-                const thisCard = cardsRefs.value[moveCard.index].$el
-                const thisList = listsRefs.value[index].$el.lastElementChild.lastElementChild
-
-                console.log(thisCard)
-                thisList.before(thisCard)*/
-        const lastElem = listsRefs.value[index].$el.lastElementChild.lastElementChild
-        const lastElem2 = listsRefs.value[index].$el.lastElementChild
-        const thisList = listsRefs.value[index].$el
-
-        /*   const afterElement = getDragAfterElement(thisList, event.clientY)
-           const draggable = document.querySelector('.dragging')
-
-           if (afterElement == null) {
-             lastElem.before(draggable)
-           } else {
-             lastElem2.insertBefore(draggable, afterElement)
-           }*/
-      },
-
-      onListEnter(event, list, index) {
+      onListEnter(event, list) {
+        // if card is dropped over another list but not a card, put it at the bottom of the list
         moveCard.targetCardIndex = list.cards.length
       },
 
       onListDrop(event, index) {
-        const elementToMove = event.dataTransfer.getData('type')
-        if (elementToMove === 'list') {
+        const elementPicked = event.dataTransfer.getData('elementPickedType')
+
+        if (elementPicked === 'list') {
           const toListIndex = index
           const fromListIndex = event.dataTransfer.getData('fromListIndex')
+
           store.commit('boards/moveList', {
             fromListIndex: fromListIndex,
             toListIndex: toListIndex,
           })
+
           store.dispatch('boards/updateBoard', {
             lists: currentBoard.value.lists,
             id: currentBoard.value.id
           })
-        } else if (elementToMove === 'card') {
+
+        } else if (elementPicked === 'card') {
           moveCard.toListIndex = index
+
           store.commit('boards/moveCard', {
-            card: moveCard.card.value,
+            card: moveCard.content.value,
             cardIndex: moveCard.index,
             fromListIndex: moveCard.fromListIndex,
             toListIndex: moveCard.toListIndex,
             targetCardIndex: moveCard.targetCardIndex
           })
+
           store.dispatch('boards/updateBoard', {
             lists: currentBoard.value.lists,
             id: currentBoard.value.id
           })
+
           moveCard.value = {}
         }
       },
 
-      onCardDragStart(event, list, listIndex, card, cardIndex) {
+      onCardDragStart(event, listIndex, card, cardIndex) {
         event.dataTransfer.dropEffect = 'move'
         event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.setData('type', 'card')
+        event.dataTransfer.setData('elementPickedType', 'card')
 
         moveCard.fromListIndex = listIndex
-        moveCard.card.value = card
+        moveCard.content.value = card
         moveCard.index = cardIndex
 
         const thisCard = event.target
-        thisCard.classList.add('dragging')
-        // console.log(thisCard)
-        /* setTimeout(() => {
-           thisCard.style.display = 'none'
-           // thisCard.style.opacity = '0.7'
-           // thisCard.style.visibility = 'hidden'
-         }, 0)*/
+
+        setTimeout(() => thisCard.style.visibility = 'hidden', 0)
       },
 
-      onCardDragEnd(event, card, index) {
-        // const thisCard = cardsRefs.value[index].$el
+      onCardDragEnd(event) {
         const thisCard = event.target
-        thisCard.classList.remove('dragging')
-
-        // thisCard.style.display = 'block'
-        // thisCard.style.opacity = '0.7'
-        // thisCard.style.visibility = 'visible'
+        thisCard.style.visibility = 'visible'
       },
 
-      onCardDragOver(event, card, index, cardIndex) {
-        moveCard.targetCard = card
+      onCardDragOver(event, cardIndex) {
+        // set the index of the card where the dragged card will be inserted
         moveCard.targetCardIndex = cardIndex
-        // console.log(moveCard.targetCardIndex)
-
-        // const thisCard = event.target
-
-        event.preventDefault()
       },
-
-      /*   onCardDrop(event, list, card, index) {
-           event.dataTransfer.setData('cardTarget', card)
-           // console.log(s)
-         }*/
 
       addListInput,
       listName,
@@ -280,7 +214,6 @@ export default {
       listsRefs,
       cardsRefs,
       moveCard,
-      getDragAfterElement
     }
   },
   components: {
@@ -355,11 +288,6 @@ export default {
   }
 }
 
-.scroll-area {
-  height: 100%;
-  width: 100%;
-}
-
 .list-card {
   background-color: $blue-grey-1;
   color: $grey-9;
@@ -408,11 +336,6 @@ export default {
 }
 
 .dragging {
-
 }
 
-.cards-scroll {
-  height: auto;
-  max-height: 100%;
-}
 </style>
