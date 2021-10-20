@@ -28,16 +28,28 @@ import {Notify} from "quasar";
 const state = {
   userDetails: {},
   loadingStatus: true,
-  colors: [
+  backgroundColors: [
     '#0078BD',
     '#00ADCC',
-    '#D28F32',
+    '#838C91',
     '#51983A',
     '#4ABF6B',
+    '#D28F32',
     '#AF4631',
     '#8A619E',
     '#CD5B92',
-    '#838C91'
+  ],
+
+  labelColors: [
+    '#61bd4f',
+    '#51e898',
+    '#f2d600',
+    '#ff9f1a',
+    '#eb5a46',
+    '#c377e0',
+    '#ff78cb',
+    '#00c2e0',
+    '#0078BD',
   ]
 }
 
@@ -143,7 +155,7 @@ const actions = {
     });
   },
 
-  handleAuthStateChanged({state, commit, dispatch}) {
+  handleAuthStateChanged({commit, dispatch}) {
     onAuthStateChanged(fbAuth, async user => {
       if (user) {
         // User is logged in
@@ -180,7 +192,8 @@ const actions = {
 const getters = {
   loadingStatus: state => state.loadingStatus,
   user: state => state.userDetails,
-  colors: state => state.colors
+  backgroundColors: state => state.backgroundColors,
+  labelColors: state => state.labelColors
 }
 
 export default {

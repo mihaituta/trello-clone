@@ -36,6 +36,7 @@
               transition-show="jump-down"
               transition-hide="jump-up"
               boxShadow="none"
+              colorsArray="backgroundColors"
               @updateColor="updateColor($event)"
             />
           </div>
@@ -55,7 +56,7 @@ export default defineComponent({
   setup() {
     const store = useStore()
     const router = useRouter()
-    const colors = computed(() => store.getters["mainStore/colors"])
+    const colors = computed(() => store.getters["mainStore/backgroundColors"])
     const openModal = ref(false)
 
     let board = reactive({
@@ -84,7 +85,7 @@ export default defineComponent({
           }
         );
       },
-      colors: computed(() => store.getters["mainStore/colors"]),
+      colors: computed(() => store.getters["mainStore/backgroundColors"]),
       boards: computed(() => store.getters["boards/boards"]),
       currentBoard: computed(() => store.getters["boards/currentBoard"]),
     }

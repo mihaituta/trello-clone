@@ -2,19 +2,32 @@
   <div class="cards-wrapper q-mt-sm q-mx-sm">
     <q-card
       class="list-card draggable-list shadow-0"
-      draggable="true"
+      :draggable="canMoveList"
       @dragstart.self="onListDragStart($event, list, index)"
       @dragend="onListDragEnd($event, list, index)"
       @dragenter.prevent="onListEnter($event, list)"
       @dragover.prevent
       @drop="onListDrop($event, index)"
+      @click="openListNameInput($event, index)"
       v-for="(list, index) in currentBoard.lists"
       :ref="el => listsRefs[index] = el"
     >
-      <q-card-section class="card-title flex items-center">
-        {{ list.name }}
-        <q-space/>
-        <q-btn class="btn-list-delete" icon="clear" @click="deleteList(list)" unelevated/>
+      <q-card-section class="list-title flex items-center no-wrap q-py-xs q-pl-sm relative-position">
+        <textarea
+          :ref="el => listNameInputsRef[index] = el"
+          class="list-name-input"
+          :value="list.name"
+          @input="resizeTextArea($event.target)"
+          rows="1"
+          @blur="updateListName($event, list, index)"
+          @keypress.enter="$event.target.blur()"
+          @keyup.esc="closeListNameInput($event, list, index)"
+          maxlength="128"
+        />
+
+        <q-btn class="btn-list-delete absolute-top-right" icon="more_horiz" unelevated>
+          <menu-actions :list="list" :listIndex="index" element="list"/>
+        </q-btn>
       </q-card-section>
 
       <q-card-section class="list-content q-py-none q-px-sm">
@@ -25,17 +38,21 @@
           @dragenter.prevent
           @dragover.prevent="onCardDragOver($event, cardIndex)"
           v-for="(card,cardIndex) in list.cards"
-          class="card shadow-1 draggable-card"
+          class="shadow-1"
           :ref="el => cardsRefs[cardIndex] = el">
-          <q-card-section class="card-content q-mb-sm">
-            {{ card.name }}
+          <q-card-section class="card-content column">
+            <span
+              v-if="list.labelColor"
+              v-bind:style="{backgroundColor: list.labelColor}"
+              class="card-label"/>
+            <span class="card-title">{{ card.name }}</span>
           </q-card-section>
         </q-card>
         <cards draggable="true" @dragstart.prevent :list="list"/>
       </q-card-section>
     </q-card>
 
-    <q-btn unelevated class="btn-add-list" label="Add new list" icon="add" @click="btnListMenu">
+    <q-btn unelevated class="btn-add-list" label="Add new list" icon="add" @click="openAddListMenu">
       <q-menu
         transition-show="none"
         transition-hide="none"
@@ -66,7 +83,6 @@
 <script>
 import {ref, reactive, computed} from "vue";
 import {useStore} from "vuex";
-import {v4 as uuidv4} from "uuid";
 
 export default {
   setup() {
@@ -76,6 +92,9 @@ export default {
     const listName = ref('')
     const listsRefs = ref([])
     const cardsRefs = ref([])
+    const listNameInputsRef = ref([])
+    let canOpenListNameInput = ref([])
+    let canMoveList = ref(true)
 
     let moveCard = reactive({
       content: {},
@@ -85,40 +104,70 @@ export default {
       targetCardIndex: 0
     })
 
-    const currentBoard = computed(() => store.getters["boards/currentBoard"])
+    const currentBoard = computed(() => {
+      listNameInputsRef.value.forEach(input => {
+        if (input) resizeTextArea(input)
+      })
+      return store.getters["boards/currentBoard"]
+    })
+
+    const resizeTextArea = (input) => {
+      input.style.height = "auto";
+      input.style.height = input.scrollHeight + "px";
+    }
 
     return {
-      btnListMenu: () => {
-        setTimeout(function () {
-          addListInput.value.focus();
-        }, 50);
+      // open the list name input update only on @mouseup event so when the user clicks(holds) and moves the card the input does not open
+      openListNameInput: (event, index) => {
+        const thisInput = listNameInputsRef.value[index]
+        if (event.target.contains(thisInput)) {
+          canMoveList.value = false
+          // reset pointer events so the text can be selected
+          thisInput.style.pointerEvents = 'auto'
+          setTimeout(() => listNameInputsRef.value[index].focus(), 0)
+        }
       },
 
-      deleteList: (list) => {
-        store.dispatch('lists/deleteList', list)
+      // reset the name input if escape key is pressed
+      closeListNameInput: (event, list, index) => {
+        listNameInputsRef.value[index].value = list.name
+        canMoveList.value = true
+        return event.target.blur()
+      },
+
+      updateListName: (event, list, index) => {
+        let thisInput = listNameInputsRef.value[index]
+        if (thisInput.value === '') {
+          thisInput.value = list.name
+        } else if (thisInput.value !== list.name) {
+          store.commit('boards/updateList', {
+            index,
+            list: {
+              ...list,
+              name: thisInput.value
+            }
+          })
+
+          store.dispatch('boards/updateBoard', {
+            lists: currentBoard.value.lists,
+            id: currentBoard.value.id
+          })
+        }
+
+        // canOpenListNameInput.value[index] = false
+        // remove pointer events when updating title so the list can be moved when clicked and dragged on the title
+        thisInput.style.pointerEvents = 'none'
+        resizeTextArea(thisInput)
+        canMoveList.value = true
+      },
+
+      openAddListMenu: () => {
+        setTimeout(() => addListInput.value.focus(), 50)
       },
 
       createList: () => {
         if (listName.value !== '') {
           store.dispatch('lists/addList', listName.value)
-
-          const list = {
-            id: uuidv4(),
-            name: listName.value,
-            cards: [],
-          }
-
-          /*
-          const tempBoard = JSON.parse(JSON.stringify(currentBoard.value))
-          tempBoard.lists.push(list)
-           */
-
-          /*  store.commit('boards/addList', list)
-            store.dispatch('boards/updateBoard', {
-              lists: currentBoard.value.lists,
-              id: currentBoard.value.id
-            })*/
-
           listName.value = ''
           showMenu.value = false
         } else {
@@ -132,7 +181,6 @@ export default {
         event.dataTransfer.setData('elementPickedType', 'list')
         event.dataTransfer.setData('fromListIndex', index)
         const thisList = listsRefs.value[index].$el
-
         setTimeout(() => thisList.style.opacity = '0', 0)
       },
 
@@ -142,7 +190,7 @@ export default {
       },
 
       onListEnter(event, list) {
-        // if card is dropped over another list but not a card, put it at the bottom of the list
+        // if card is dropped over another list but not a card, place it at the bottom of the list
         moveCard.targetCardIndex = list.cards.length
       },
 
@@ -198,8 +246,7 @@ export default {
       },
 
       onCardDragEnd(event) {
-        const thisCard = event.target
-        thisCard.style.visibility = 'visible'
+        event.target.style.visibility = 'visible'
       },
 
       onCardDragOver(event, cardIndex) {
@@ -207,6 +254,10 @@ export default {
         moveCard.targetCardIndex = cardIndex
       },
 
+      resizeTextArea,
+      canMoveList,
+      canOpenListNameInput,
+      listNameInputsRef,
       addListInput,
       listName,
       showMenu,
@@ -217,7 +268,8 @@ export default {
     }
   },
   components: {
-    'cards': require('components/Cards').default
+    'cards': require('components/Cards').default,
+    'menu-actions': require('components/menuActions').default
   }
 }
 </script>
@@ -302,15 +354,43 @@ export default {
     cursor: pointer;
   }
 
-  .card-title {
+  ::v-deep(.list-title) {
     font-size: 1rem;
-    padding-left: 0.9rem;
-    padding-block: 0.3rem;
-    padding-right: 0.4rem;
+    padding-right: 2.1rem;
+
+    .list-name-input {
+      padding-left: 0.4rem;
+      padding-block: 0.3rem;
+      padding-right: 0.4rem;
+      pointer-events: none;
+      cursor: pointer;
+      width: 100%;
+      color: $grey-9;
+      font-weight: bold;
+      background-color: transparent;
+      border: none;
+      outline: none;
+      word-wrap: break-word;
+      resize: none;
+      overflow: hidden;
+      height: fit-content;
+
+      &:focus {
+        box-shadow: inset 0 0 0 2px $primary;
+        border-radius: 3px;
+        border: none;
+        outline: none;
+        color: $blue-grey-9;
+        background-color: white;
+        cursor: text;
+      }
+    }
 
     .btn-list-delete {
       font-size: 0.8rem;
       width: 2rem;
+      right: 0.2rem;
+      top: 0.3rem;
     }
   }
 
@@ -318,7 +398,10 @@ export default {
     .card-content {
       background-color: $grey-1;
       font-weight: normal;
-      padding: 0.4rem;
+      padding-inline: 0.4rem;
+      padding-bottom: 0.125rem;
+      padding-top: 0.375rem;
+      margin-bottom: 0.5rem;
       cursor: move;
       cursor: grab;
 
@@ -331,11 +414,23 @@ export default {
         cursor: move;
         cursor: grabbing;
       }
+
+      .card-label {
+        min-height: 0.5rem;
+        min-width: 2.5rem;
+        width: 2.5rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.3rem;
+        margin-top: 0.1rem;
+      }
+
+      .card-title {
+        font-size: 0.85rem;
+        padding: 0;
+        margin-bottom: 0.25rem;
+      }
     }
   }
-}
-
-.dragging {
 }
 
 </style>

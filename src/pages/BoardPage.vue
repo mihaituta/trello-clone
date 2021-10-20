@@ -5,7 +5,7 @@
         <q-scroll-area class="scroll-area col">
           <div class="q-px-sm flex no-wrap">
             <input
-              class="board-name q-px-sm q-py-xs q-mr-sm"
+              class="board-name q-px-sm q-pt-xs q-mr-sm"
               type="text"
               v-model="board.name"
               v-autowidth="{maxWidth: '100%'}"
@@ -16,42 +16,7 @@
             />
 
             <q-btn class="btn-actions" icon="more_horiz" unelevated>
-              <q-menu
-                :offset="[8,0]"
-                anchor="top right" self="top left"
-                transition-show="jump-right"
-                transition-hide="jump-left"
-                style="background-color: #EEEEEEFF;">
-                <q-list dense>
-                  <q-item class="actions-items" clickable>
-                    <q-item-section>
-                      <div class="color-wrapper text-grey-9">
-                        <div>Color</div>
-                        <div class="board-color" v-bind:style="{backgroundColor: currentBoard.color}">
-                        </div>
-                      </div>
-                    </q-item-section>
-                    <color-select
-                      :offset="[8,0]"
-                      padding="0.8rem"
-                      background-color="#EEEEEEFF"
-                      anchor="top right"
-                      self="top left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
-                      @updateColor="updateColor($event)"
-                    />
-                  </q-item>
-
-                  <q-separator/>
-
-                  <q-item class="delete-board actions-items text-grey-9" clickable @click="deleteBoard" v-close-popup>
-                    <q-item-section>
-                      Delete board
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
+              <menu-actions element="board"/>
             </q-btn>
           </div>
           <lists/>
@@ -65,7 +30,6 @@
 import {computed, onBeforeUnmount, reactive, ref, watch} from "vue";
 import {useStore} from "vuex";
 import {useRoute, useRouter} from "vue-router";
-import {useQuasar} from 'quasar'
 import {directive as VueInputAutowidth} from "vue-input-autowidth"
 
 export default {
@@ -75,66 +39,26 @@ export default {
     const store = useStore()
     const route = useRoute()
     const router = useRouter()
-    const $q = useQuasar()
-
     const currentBoard = computed(() => store.getters["boards/currentBoard"])
     let board = reactive({
       color: currentBoard.value.color,
       name: currentBoard.value.name
     })
 
-    const deleteBoard = () => {
-      $q.dialog({
-        title: 'Confirm',
-        message: 'Delete board?',
-        style:
-          'background-color: #ffffff3d;' +
-          'color: white;' +
-          'font-size: 1.1rem;' +
-          'width: 20rem',
-        ok: {
-          label: 'Yes',
-          color: 'negative',
-          unelevated: true,
-        },
-        cancel: {
-          color: 'primary',
-          unelevated: true,
-        },
-      }).onOk(() => {
-        store.dispatch('boards/deleteBoard', currentBoard.value.id)
-      })
-    }
-
     // set the boardName from the state when refreshing page
-    watch(currentBoard, () => {
-      board.name = currentBoard.value.name
-    })
+    watch(currentBoard, () => board.name = currentBoard.value.name)
 
     // reset currentBoard when changing the page
-    onBeforeUnmount(() => {
-      store.commit('boards/setCurrentBoard', {board: {}})
-    })
+    onBeforeUnmount(() => store.commit('boards/setCurrentBoard', {board: {}}))
 
     return {
       route,
       board,
       currentBoard,
-      deleteBoard,
 
       closeInput: (event) => {
         board.name = currentBoard.value.name
         return event.target.blur()
-      },
-
-      updateColor: (color) => {
-        if (currentBoard.value.color !== color) {
-          board.color = color
-          store.dispatch('boards/updateBoard', {
-            color: board.color,
-            id: currentBoard.value.id
-          })
-        }
       },
 
       updateName: () => {
@@ -156,7 +80,8 @@ export default {
   },
   components: {
     'color-select': require('components/ColorSelect').default,
-    'lists': require('components/Lists').default
+    'lists': require('components/Lists').default,
+    'menu-actions': require('components/menuActions').default
   }
 }
 </script>
@@ -172,7 +97,12 @@ export default {
   outline: none;
   border-radius: 3px;
 
+
   &:focus {
+    box-shadow: inset 0 0 0 2px $primary;
+    border-radius: 3px;
+    border: none;
+    outline: none;
     color: $blue-grey-10;
     background-color: $grey-3;
     cursor: text;
@@ -182,31 +112,5 @@ export default {
 .btn-actions {
   background-color: #ffffff3d;
   color: $grey-2;
-}
-
-.actions-items {
-  padding: 0.4rem 0.6rem;
-}
-
-.delete-board {
-  color: $grey-2;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-.color-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  color: $grey-2;
-  font-weight: bold;
-  font-size: 1rem;
-
-  .board-color {
-    width: 2rem;
-    height: 1.6rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
 }
 </style>

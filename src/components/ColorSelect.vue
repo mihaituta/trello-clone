@@ -28,6 +28,9 @@ export default {
     padding: {
       type: String
     },
+    colorsArray: {
+      type: String
+    },
     backgroundColor: {
       type: String
     },
@@ -51,14 +54,14 @@ export default {
     },
   },
   emits: ['updateColor'],
-  setup(_, {emit}) {
+  setup(props, {emit}) {
     const store = useStore()
     return {
       selectColor: (color) => {
         emit('updateColor', color)
       },
 
-      colors: computed(() => store.getters["mainStore/colors"]),
+      colors: computed(() => store.getters[`mainStore/${props.colorsArray}`]),
     }
   }
 }

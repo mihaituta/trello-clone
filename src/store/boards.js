@@ -45,6 +45,10 @@ const mutations = {
     const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
     board.lists.splice(payload.toListIndex, 0, listToMove)
   },
+  updateList(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    board.lists[payload.index] = payload.list
+  },
   addCard(state, payload) {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     const list = board.lists.find(list => list.id === payload.list_id)
@@ -102,7 +106,7 @@ const actions = {
     }
   },
 
-  async boardsListener({commit, state, rootGetters}) {
+  async boardsListener({commit, rootGetters}) {
     const userId = rootGetters['mainStore/user'].userId
     const boardsQuery = query(collection(fbDB, `users/${userId}/boards`));
     let initState = true

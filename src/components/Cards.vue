@@ -16,10 +16,12 @@
             borderless
             class="card-textarea q-pa-sm q-mb-sm"
             autogrow
+            rows="1"
             v-model="cardName"
             type="textarea"
             @keydown.enter="createCard"
             placeholder="Enter a title for this card..."
+            maxlength="128"
           />
         </q-card>
 
@@ -120,6 +122,7 @@ export default {
     padding: 0;
     max-height: 10rem;
     overflow: auto;
+    word-break: break-word;
   }
 }
 
