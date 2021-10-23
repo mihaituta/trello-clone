@@ -15,7 +15,9 @@
       :key="color"
       @click="selectColor(color)"
       v-bind:style="{backgroundColor: color}"
-    />
+    >
+      <q-icon v-if="elementColor === color" name="done" color="white"/>
+    </q-btn>
   </q-menu>
 </template>
 
@@ -25,6 +27,9 @@ import {useStore} from "vuex";
 
 export default {
   props: {
+    elementColor: {
+      type: String
+    },
     padding: {
       type: String
     },

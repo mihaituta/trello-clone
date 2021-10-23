@@ -36,29 +36,6 @@ const mutations = {
     // find the board in array and replace it with the new one
     state.boards = [...state.boards.map(item => item.id !== payload.id ? item : {...item, ...payload})]
   },
-  addList(state, payload) {
-    const board = state.boards.find(board => board.id === state.currentBoard.id)
-    board.lists.push(payload)
-  },
-  moveList(state, payload) {
-    const board = state.boards.find(board => board.id === state.currentBoard.id)
-    const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
-    board.lists.splice(payload.toListIndex, 0, listToMove)
-  },
-  updateList(state, payload) {
-    const board = state.boards.find(board => board.id === state.currentBoard.id)
-    board.lists[payload.index] = payload.list
-  },
-  addCard(state, payload) {
-    const board = state.boards.find(board => board.id === state.currentBoard.id)
-    const list = board.lists.find(list => list.id === payload.list_id)
-    list.cards.push(payload.card)
-  },
-  moveCard(state, payload) {
-    const board = state.boards.find(board => board.id === state.currentBoard.id)
-    board.lists[payload.fromListIndex].cards.splice(payload.cardIndex, 1)
-    board.lists[payload.toListIndex].cards.splice(payload.targetCardIndex, 0, payload.card)
-  },
   deleteBoard(state, board_id) {
     const boardToDelete = state.boards.findIndex(item => item.id === board_id);
     state.boards.splice(boardToDelete, 1)
@@ -70,6 +47,62 @@ const mutations = {
       state.currentBoard = state.boards.find(board => board.slug === payload.slug)
     }
   },
+
+  /*  addList(state, payload) {
+      const board = state.boards.find(board => board.id === state.currentBoard.id)
+      board.lists.push(payload)
+    },*/
+
+  moveList(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
+    board.lists.splice(payload.toListIndex, 0, listToMove)
+  },
+  updateList(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    board.lists[payload.index] = payload.list
+  },
+
+  addCard(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const list = board.lists.find(list => list.id === payload.list_id)
+    list.cards.push(payload.card)
+  },
+  moveCard(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    board.lists[payload.fromListIndex].cards.splice(payload.cardIndex, 1)
+    board.lists[payload.toListIndex].cards.splice(payload.targetCardIndex, 0, payload.card)
+  },
+
+  updateCard(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const card = board.lists[payload.listIndex].cards[payload.cardIndex]
+
+    if (payload.name)
+      card.name = payload.name
+
+    if (payload.description)
+      card.description = payload.description
+
+    //toggle checkboxes
+    if (payload.checkboxes)
+      card.checkboxes = payload.checkboxes
+
+    //delete checkbox
+    if (payload.checkboxIndexToDelete !== undefined)
+      card.checkboxes.splice(payload.checkboxIndexToDelete, 1)
+
+
+    //set if the checklist is completed: true/false
+    if (payload.checklistCompleted !== undefined)
+      card.checklistCompleted = payload.checklistCompleted
+  },
+
+  deleteCard(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    board.lists[payload.listIndex].cards.splice(payload.cardIndex, 1)
+  },
+
   clearBoardsData(state) {
     state.currentBoard = {};
     state.boards = [];

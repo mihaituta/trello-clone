@@ -29,13 +29,14 @@
           self="top left"
           transition-show="jump-right"
           transition-hide="jump-left"
+          :elementColor="element === 'board' ? currentBoard.color : list.labelColor"
           @updateColor="updateColor($event)"
         />
       </q-item>
 
       <q-separator/>
 
-      <q-item class="delete-board actions-items text-grey-9" clickable @click="showModal = true" v-close-popup>
+      <q-item class="delete-board actions-items text-grey-9" clickable @click="openDeleteModal" v-close-popup>
         <q-item-section>
           Delete {{ element }}
         </q-item-section>
@@ -43,30 +44,19 @@
     </q-list>
   </q-menu>
 
-  <q-dialog class="text-grey-8" v-model="showModal" auto-close>
-    <q-card>
-      <q-card-section class="modal-title-wrapper row items-center justify-center text-grey-8 relative-position">
-        <div class="modal-title">Delete {{ element }}?</div>
-        <q-btn class="absolute-right btn-close-modal" color="grey-7" icon="close" flat dense/>
-      </q-card-section>
-
-      <q-separator/>
-
-      <q-card-section class="modal-content">
-        Deleting a {{ element }} is forever. There is no undo.
-      </q-card-section>
-
-      <q-card-actions>
-        <q-btn class="full-width" unelevated :label="'Delete ' + element" color="negative" @click="deleteElement"/>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <delete-modal
+    :showModal="showDeleteModal"
+    :element="element"
+    :list="list"
+    :listIndex="listIndex"
+    @closeDeleteModal="closeDeleteModal($event)"/>
 </template>
 
 <script>
 import {useStore} from "vuex";
 import {useQuasar} from "quasar";
 import {computed, ref} from "vue";
+import DeleteModal from "components/DeleteModal";
 
 export default {
   props: {
@@ -84,18 +74,19 @@ export default {
   setup(props) {
     const store = useStore()
     const currentBoard = computed(() => store.getters["boards/currentBoard"])
-    const showModal = ref(false)
+    // const showModal = ref(false)
+    let showDeleteModal = ref(false)
 
     return {
       currentBoard,
-      showModal,
+      showDeleteModal,
 
-      deleteElement: () => {
-        if (props.element === 'board') {
-          store.dispatch('boards/deleteBoard', currentBoard.value.id)
-        } else if (props.element === 'list') {
-          store.dispatch('lists/deleteList', props.list)
-        }
+      openDeleteModal: () => {
+        showDeleteModal.value = true
+      },
+
+      closeDeleteModal: () => {
+        showDeleteModal.value = false
       },
 
       updateColor: (color) => {
@@ -111,7 +102,7 @@ export default {
             index: props.listIndex,
             list: {
               ...props.list,
-              labelColor: color
+              labelColor: props.list.labelColor !== color ? color : null
             }
           })
           store.dispatch('boards/updateBoard', {
@@ -124,6 +115,7 @@ export default {
   },
 
   components: {
+    'delete-modal': require('components/DeleteModal').default,
     'color-select': require('components/ColorSelect').default
   }
 }
@@ -164,28 +156,6 @@ export default {
     height: 1.4rem;
     border-radius: 4px;
     cursor: pointer;
-  }
-}
-
-.q-dialog {
-  .modal-title-wrapper {
-    padding: 0.7rem;
-
-    .modal-title {
-      font-weight: bold;
-      font-size: 1rem;
-    }
-  }
-
-  .btn-close-modal {
-    width: 3rem;
-    font-size: 0.8rem;
-    padding-bottom: 0;
-  }
-
-  .modal-content {
-    padding: 0.7rem;
-    font-size: 1rem;
   }
 }
 </style>

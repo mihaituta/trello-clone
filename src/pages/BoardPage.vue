@@ -79,9 +79,8 @@ export default {
     }
   },
   components: {
-    'color-select': require('components/ColorSelect').default,
     'lists': require('components/Lists').default,
-    'menu-actions': require('components/menuActions').default
+    'menu-actions': require('components/MenuActions').default
   }
 }
 </script>

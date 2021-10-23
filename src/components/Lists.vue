@@ -5,7 +5,7 @@
       :draggable="canMoveList"
       @dragstart.self="onListDragStart($event, list, index)"
       @dragend="onListDragEnd($event, list, index)"
-      @dragenter.prevent="onListEnter($event, list)"
+      @dragenter.prevent="onListEnter($event, list, index)"
       @dragover.prevent
       @drop="onListDrop($event, index)"
       @click="openListNameInput($event, index)"
@@ -22,7 +22,7 @@
           @blur="updateListName($event, list, index)"
           @keypress.enter="$event.target.blur()"
           @keyup.esc="closeListNameInput($event, list, index)"
-          maxlength="128"
+          maxlength="100"
         />
 
         <q-btn class="btn-list-delete absolute-top-right" icon="more_horiz" unelevated>
@@ -33,25 +33,42 @@
       <q-card-section class="list-content q-py-none q-px-sm">
         <q-card
           draggable="true"
+          @click="openCardModal(card, index, cardIndex)"
           @dragstart.self="onCardDragStart($event, index, card, cardIndex)"
           @dragend="onCardDragEnd($event)"
           @dragenter.prevent
           @dragover.prevent="onCardDragOver($event, cardIndex)"
-          v-for="(card,cardIndex) in list.cards"
+          v-for="(card, cardIndex) in list.cards"
           class="shadow-1"
           :ref="el => cardsRefs[cardIndex] = el">
+
           <q-card-section class="card-content column">
-            <span
-              v-if="list.labelColor"
-              v-bind:style="{backgroundColor: list.labelColor}"
-              class="card-label"/>
+            <span v-if="list.labelColor"
+                  v-bind:style="{backgroundColor: list.labelColor}"
+                  class="card-label"/>
+
             <span class="card-title">{{ card.name }}</span>
+
+            <div v-if="card.checkboxes && card.checkboxes.length > 0" class="checklist flex"
+                 v-bind:style="{backgroundColor: card.checklistCompleted ? '#61bd4f' : ''}">
+              <q-icon
+                v-bind:style="{color: card.checklistCompleted ? 'white' : ''}"
+                name="o_check_box"/>
+              <span
+                v-bind:style="{color: card.checklistCompleted ? 'white' : ''}"
+                class="checklist-numbers">{{ checklistStatus(card) }}</span>
+            </div>
+
           </q-card-section>
+
         </q-card>
-        <cards draggable="true" @dragstart.prevent :list="list"/>
+        <create-card draggable="true" @dragstart.prevent :list="list"/>
       </q-card-section>
     </q-card>
 
+    <card-modal :card="updateCardData"
+                :showModal="showCardModal"
+                @closeCardModal="closeCardModal($event)"/>
     <q-btn unelevated class="btn-add-list" label="Add new list" icon="add" @click="openAddListMenu">
       <q-menu
         transition-show="none"
@@ -95,13 +112,15 @@ export default {
     const listNameInputsRef = ref([])
     let canOpenListNameInput = ref([])
     let canMoveList = ref(true)
+    let showCardModal = ref(false)
+    let updateCardData = ref({})
 
     let moveCard = reactive({
       content: {},
       index: 0,
       fromListIndex: 0,
       toListIndex: 0,
-      targetCardIndex: 0
+      targetCardIndex: undefined
     })
 
     const currentBoard = computed(() => {
@@ -117,6 +136,11 @@ export default {
     }
 
     return {
+      checklistStatus: (card) => {
+        const checked = computed(() => card.checkboxes.filter(item => item.checked === true))
+        return (checked.value.length + '/' + card.checkboxes.length)
+      },
+
       // open the list name input update only on @mouseup event so when the user clicks(holds) and moves the card the input does not open
       openListNameInput: (event, index) => {
         const thisInput = listNameInputsRef.value[index]
@@ -154,7 +178,6 @@ export default {
           })
         }
 
-        // canOpenListNameInput.value[index] = false
         // remove pointer events when updating title so the list can be moved when clicked and dragged on the title
         thisInput.style.pointerEvents = 'none'
         resizeTextArea(thisInput)
@@ -175,6 +198,19 @@ export default {
         }
       },
 
+      openCardModal: (card, listIndex, cardIndex) => {
+        updateCardData.value = {
+          content: {...card},
+          cardIndex: cardIndex,
+          listIndex: listIndex
+        }
+        showCardModal.value = true
+      },
+
+      closeCardModal: () => {
+        showCardModal.value = false
+      },
+
       onListDragStart(event, list, index) {
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = "move"
@@ -189,9 +225,10 @@ export default {
         thisList.style.opacity = '1'
       },
 
-      onListEnter(event, list) {
-        // if card is dropped over another list but not a card, place it at the bottom of the list
-        moveCard.targetCardIndex = list.cards.length
+      onListEnter(event, list, targetListIndex) {
+        // if a card is dropped over another list but not over a card, place it at the bottom of that list
+        if (moveCard.fromListIndex !== targetListIndex)
+          moveCard.targetCardIndex = list.cards.length
       },
 
       onListDrop(event, index) {
@@ -214,20 +251,28 @@ export default {
         } else if (elementPicked === 'card') {
           moveCard.toListIndex = index
 
-          store.commit('boards/moveCard', {
-            card: moveCard.content.value,
-            cardIndex: moveCard.index,
-            fromListIndex: moveCard.fromListIndex,
-            toListIndex: moveCard.toListIndex,
-            targetCardIndex: moveCard.targetCardIndex
-          })
+          if (moveCard.targetCardIndex !== undefined) {
+            store.commit('boards/moveCard', {
+              card: moveCard.content.value,
+              cardIndex: moveCard.index,
+              fromListIndex: moveCard.fromListIndex,
+              toListIndex: moveCard.toListIndex,
+              targetCardIndex: moveCard.targetCardIndex
+            })
 
-          store.dispatch('boards/updateBoard', {
-            lists: currentBoard.value.lists,
-            id: currentBoard.value.id
-          })
+            store.dispatch('boards/updateBoard', {
+              lists: currentBoard.value.lists,
+              id: currentBoard.value.id
+            })
+          }
 
-          moveCard.value = {}
+          moveCard = {
+            content: {},
+            index: 0,
+            fromListIndex: 0,
+            toListIndex: 0,
+            targetCardIndex: undefined
+          }
         }
       },
 
@@ -254,6 +299,8 @@ export default {
         moveCard.targetCardIndex = cardIndex
       },
 
+      updateCardData,
+      showCardModal,
       resizeTextArea,
       canMoveList,
       canOpenListNameInput,
@@ -268,8 +315,9 @@ export default {
     }
   },
   components: {
-    'cards': require('components/Cards').default,
-    'menu-actions': require('components/menuActions').default
+    'create-card': require('components/CreateCard').default,
+    'menu-actions': require('components/MenuActions').default,
+    'card-modal': require('components/CardModal').default
   }
 }
 </script>
@@ -402,11 +450,9 @@ export default {
       padding-bottom: 0.125rem;
       padding-top: 0.375rem;
       margin-bottom: 0.5rem;
-      cursor: move;
-      cursor: grab;
+      cursor: pointer;
 
       &:hover {
-        cursor: grab;
         background-color: $grey-3;
       }
 
@@ -425,9 +471,28 @@ export default {
       }
 
       .card-title {
+        word-break: break-word;
         font-size: 0.85rem;
         padding: 0;
         margin-bottom: 0.25rem;
+      }
+
+      .checklist {
+        padding: 0.3rem 0.4rem 0.1rem 0.3rem;
+        margin-bottom: 0.3rem;
+        width: fit-content;
+        border-radius: 3px;
+        color: $grey-8;
+        font-weight: bold;
+
+        .q-icon {
+          font-size: 0.9rem;
+        }
+
+        .checklist-numbers {
+          padding-left: 0.3rem;
+          font-size: 0.7rem;
+        }
       }
     }
   }

@@ -66,10 +66,6 @@ export default {
         }
       },
 
-      deleteCard: (card) => {
-        store.dispatch('cards/deleteCard', card)
-      },
-
       createCard: () => {
         if (cardName.value !== '') {
 
