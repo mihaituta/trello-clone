@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://user-images.githubusercontent.com/41682806/137790836-c51c9bea-f6d0-4a63-a963-4bdae6d1f5f6.png"/><br/>
+  <img src="https://user-images.githubusercontent.com/41682806/138610126-4ea4c59a-1a57-4dd6-9af1-13fd5ed2018a.png"/><br/>
 </h1>
 
 # Trello Clone
