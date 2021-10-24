@@ -1,12 +1,11 @@
 <template>
   <q-dialog class="text-grey-8"
             v-model="showModal"
-            @hide="onClose"
-            auto-close>
+            @hide="onClose">
     <q-card>
       <q-card-section class="modal-title-wrapper row items-center justify-center text-grey-8 relative-position">
         <div class="modal-title">Delete {{ element }}?</div>
-        <q-btn class="absolute-right btn-close-modal" color="grey-7" icon="close" flat dense/>
+        <q-btn class="absolute-right btn-close-modal" color="grey-7" icon="close" flat dense v-close-popup/>
       </q-card-section>
 
       <q-separator/>
@@ -16,7 +15,8 @@
       </q-card-section>
 
       <q-card-actions class="q-pt-none">
-        <q-btn class="full-width " unelevated :label="'Delete ' + element" color="negative" @click="deleteElement"/>
+        <q-btn class="full-width " unelevated :label="'Delete ' + element" color="negative" @click="deleteElement"
+               v-close-popup/>
       </q-card-actions>
     </q-card>
   </q-dialog>

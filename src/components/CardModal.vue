@@ -9,7 +9,7 @@
         <q-icon name="o_feed" size="sm" class="absolute"/>
         <textarea
           ref="cardNameInput"
-          class="card-name-input"
+          class="card-name-input card-textarea"
           :value="currentCard.name"
           @input="resizeTextArea($event.target)"
           rows="1"
@@ -18,20 +18,6 @@
           @keyup.esc.stop="closeCardNameInput($event)"
           maxlength="100"
         />
-        <!--        <q-input
-                  ref="cardNameInput"
-                  class="card-name-input"
-                  :model-value="currentCard.name"
-                  @update:model-value="update($event)"
-                  @blur="updateCardName($event)"
-                  @keypress.enter="$event.target.blur()"
-                  @keyup.esc.stop="closeCardNameInput($event)"
-                  dense
-                  borderless
-                  autogrow
-                  maxlength="100"
-                />-->
-
       </q-card-section>
 
       <q-btn class="absolute-top-right btn-close-modal" round flat icon="close" v-close-popup/>
@@ -43,7 +29,19 @@
             <q-icon name="subject" size="sm" class="absolute"/>
             <div class="description-title">Description</div>
           </div>
-          <textarea class="" rows="3"></textarea>
+
+          <textarea
+            placeholder="Add a more detailed description..."
+            ref="cardDescriptionInput"
+            class="card-description-input card-textarea"
+            :value="currentCard.description"
+            @input="resizeTextArea($event.target)"
+            rows="1"
+            @blur="updateCardDescription($event)"
+            @keypress.enter="$event.target.blur()"
+            @keyup.esc.stop="closeCardDescriptionInput($event)"
+            maxlength="1024"
+          />
         </div>
 
         <div class="checklist-wrapper text-weight-bold">
@@ -58,18 +56,123 @@
           </div>
 
           <div v-if="currentCard.checkboxes" class="column">
-            <q-checkbox
-              class="checkbox items-center relative-position"
-              dense
-              v-for="(checkbox, index) in checkboxes"
-              :model-value="checkbox.checked"
-              @update:model-value="updateCard(index)"
+            <!--            <div
+                          class="column"
+                          v-for="(checkbox, index) in checkboxes">
+                          <q-checkbox
+                            class="checkbox items-center relative-position"
+                            dense
+                            :model-value="checkbox.checked"
+                            @update:model-value="toggleCardCheckbox(index)"
+                          >
+                            <q-btn
+                              class="absolute-right btn-delete" dense
+                              @click.stop="deleteCheckbox(index)" flat icon="o_delete"/>
+                          </q-checkbox>
+
+                          <textarea
+                            :ref="el => checkboxNameInputs[index] = el"
+                            class="card-checkbox-input card-textarea"
+                            :value="checkbox.name"
+                            @input="resizeTextArea($event.target, index)"
+                            rows="1"
+                            @blur.stop="updateCheckboxName($event, index)"
+                            @keyup.esc.stop="closeCheckboxNameInput($event, index)"
+                            @keyup.enter.capture.prevent
+                            @click.stop
+                            maxlength="100"
+                          />
+                        </div>-->
+
+            <div v-for="(checkbox, index) in checkboxes" class="checkbox-wrapper flex items-center no-wrap">
+              <input
+                type="checkbox"
+                class="checkbox"
+                :checked="checkbox.checked"
+                :aria-checked="checkbox.checked"
+                @change="toggleCardCheckbox(index)"
+              />
+              <textarea
+                :ref="el => checkboxNameInputs[index] = el"
+                class="card-checkbox-input card-textarea"
+                :value="checkbox.name"
+                @input="resizeTextArea($event.target, index)"
+                rows="1"
+                @blur="updateCheckboxName($event, index)"
+                @keyup.esc.stop="closeCheckboxNameInput($event, index)"
+                @keypress.enter="$event.target.blur()"
+                @click.stop
+                maxlength="100"
+              />
+              <q-btn class=" btn-delete" dense
+                     @click.stop="deleteCheckbox(index)" flat icon="o_delete"/>
+            </div>
+
+          </div>
+
+          <!--            <q-checkbox
+                        class="checkbox items-center relative-position"
+                        dense
+                        v-for="(checkbox, index) in checkboxes"
+                        :model-value="checkbox.checked"
+                        @update:model-value="toggleCardCheckbox(index)"
+                        @keypress.space.capture.prevent.stop
+                        @keyup.space.capture.prevent.stop
+                        @keydown.space.capture.prevent.stop
+
+                      >
+                          <textarea
+                            :ref="el => checkboxNameInputs[index] = el"
+                            class="card-checkbox-input card-textarea"
+                            :value="checkbox.name"
+                            @input="resizeTextArea($event.target, index)"
+                            rows="1"
+                            @blur.stop="updateCheckboxName($event, index)"
+                            @keyup.esc.stop="closeCheckboxNameInput($event, index)"
+                            @keyup.enter.capture.prevent
+                            @click.stop
+                            maxlength="100"
+                          />
+          &lt;!&ndash;              @keypress.enter.stop.prevent="$event.target.blur()"&ndash;&gt;
+                        <q-btn
+                          class="absolute-right btn-delete" dense
+                          @click.stop="deleteCheckbox(index)" flat icon="o_delete"/>
+                      </q-checkbox>
+                    </div>-->
+
+          <div class="add-checkbox-wrapper">
+            <q-btn v-if="!showAddMenu" dense unelevated class="btn-add-checkbox q-mb-sm" label="Add a checkbox"
+                   @click.stop="showAddMenu = true"/>
+            <div
+              v-else
+              class="add-checkbox-menu"
+              @focusout="closeAddCheckboxMenu"
             >
-              <div @click.stop class="checkbox-label">{{ checkbox.name }}</div>
-              <q-btn
-                class="absolute-right btn-delete" dense
-                @click.stop="deleteCheckbox(index)" flat icon="o_delete"/>
-            </q-checkbox>
+              <q-form @submit.stop="createCheckbox">
+                <q-input
+                  ref="addCheckboxInput"
+                  autofocus
+                  borderless
+                  class="add-checkbox-input"
+                  autogrow
+                  rows="1"
+                  v-model="checkboxName"
+                  type="textarea"
+                  @keydown.enter="createCheckbox"
+                  @keyup.esc.stop="closeAddCheckboxMenu"
+                  placeholder="Add a checkbox..."
+                  maxlength="100"
+                />
+
+                <div class="q-mt-xs">
+                  <q-btn class="btn-checkbox-actions btn-checkbox-submit" dense unelevated color="primary" type="submit"
+                         label="Add checkbox"/>
+                  <q-btn class="btn-checkbox-actions btn-checkbox-cancel" dense unelevated text-color="grey-9"
+                         icon="close"
+                         @click.stop="closeAddCheckboxMenu"/>
+                </div>
+              </q-form>
+            </div>
           </div>
         </div>
       </q-card-section>
@@ -86,8 +189,9 @@
 </template>
 
 <script>
-import {computed, ref} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {useStore} from "vuex";
+import {v4 as uuidv4} from "uuid";
 
 export default {
   props: {
@@ -103,16 +207,20 @@ export default {
   setup(props, {emit}) {
     const store = useStore()
     const currentBoard = computed(() => store.getters["boards/currentBoard"])
-    let showDeleteModal = ref(false)
+    const showDeleteModal = ref(false)
     const currentCard = computed(() => currentBoard.value.lists[props.card.listIndex].cards[props.card.cardIndex])
     let checkboxes = computed(() => JSON.parse(JSON.stringify(currentCard.value.checkboxes)))
     const cardNameInput = ref(null)
-    let tempName = ref('')
+    const cardDescriptionInput = ref(null)
+    let checkboxNameInputs = ref([])
+    const showAddMenu = ref(false)
+    const checkboxName = ref('')
+    const addCheckboxInput = ref(null)
+
     //checkboxes that have been checked
     const checked = computed(() => {
-      if (currentCard.value.checkboxes) {
+      if (currentCard.value.checkboxes)
         return currentCard.value.checkboxes.filter(item => item.checked === true)
-      }
     })
 
     const resizeTextArea = (input) => {
@@ -120,45 +228,23 @@ export default {
       input.style.height = input.scrollHeight + "px";
     }
 
+    // watch the checkbox refs array and resize height when value changes
+    watch(checkboxNameInputs.value, inputs => {
+      inputs.forEach(input => {
+        if (input) resizeTextArea(input)
+      })
+    })
 
     return {
-      tempName,
-      updateCard: (index) => {
-        let checkbox = checkboxes.value[index]
-
-        checkbox.checked = !checkbox.checked
-
-        const checked = checkboxes.value.filter(item => item.checked === true)
-
-        store.commit('boards/updateCard', {
-          ...props.card.content,
-          listIndex: props.card.listIndex,
-          cardIndex: props.card.cardIndex,
-          checkboxIndex: index,
-          // checked: checkbox.checked,
-          checkboxes: checkboxes.value,
-          checklistCompleted: checkboxes.value.length === checked.length
-        })
-
-        store.dispatch('boards/updateBoard', {
-          lists: currentBoard.value.lists,
-          id: currentBoard.value.id
-        })
-      },
-
-      update: (event) => {
-        tempName.value = event
-      },
-
+      // name
       updateCardName: (event) => {
-        // let thisInput = tempName
         let thisInput = event.target
 
         if (thisInput.value === '') {
           thisInput.value = currentCard.value.name
         } else if (thisInput.value !== currentCard.value.name) {
           store.commit('boards/updateCard', {
-            ...props.card.content,
+            ...currentCard.value,
             name: thisInput.value,
             listIndex: props.card.listIndex,
             cardIndex: props.card.cardIndex,
@@ -172,45 +258,10 @@ export default {
 
         resizeTextArea(thisInput)
       },
-
-      // reset the name input if escape key is pressed
       closeCardNameInput: (event) => {
         event.target.value = currentCard.value.name
-        // tempName.value = currentCard.value.name
         return event.target.blur()
       },
-
-      deleteCheckbox: (index) => {
-        const checked = checkboxes.value.filter(item => item.checked === true)
-
-        store.commit('boards/updateCard', {
-          listIndex: props.card.listIndex,
-          cardIndex: props.card.cardIndex,
-          checkboxIndexToDelete: index,
-          checklistCompleted: checkboxes.value.length === checked.length
-        })
-
-        store.dispatch('boards/updateBoard', {
-          lists: currentBoard.value.lists,
-          id: currentBoard.value.id
-        })
-      },
-
-      progressBar: computed(() => {
-        if (currentCard.value.checkboxes) {
-          const value = Math.round(checked.value.length / checkboxes.value.length * 100) / 100
-          return checked.value.length === 0 ? 0 : value
-        }
-
-        return 0
-      }),
-
-      onClose: () => emit('closeCardModal'),
-
-      onShow: () => {
-        resizeTextArea(cardNameInput.value)
-      },
-
       deleteCard: () => {
         store.commit('boards/deleteCard', {
           listIndex: props.card.listIndex,
@@ -225,9 +276,150 @@ export default {
         showDeleteModal.value = false
         emit('closeCardModal')
       },
-
       closeDeleteModal: () => showDeleteModal.value = false,
 
+      // description
+      updateCardDescription: (event) => {
+        const thisInput = event.target
+
+        //if the description is only white spaces set it back to '' no value to display placeholder text
+        if (thisInput.value.length > 0 && thisInput.value.trim() === '')
+          thisInput.value = ''
+
+        store.commit('boards/updateCard', {
+          ...currentCard.value,
+          description: thisInput.value,
+          listIndex: props.card.listIndex,
+          cardIndex: props.card.cardIndex,
+        })
+
+        store.dispatch('boards/updateBoard', {
+          lists: currentBoard.value.lists,
+          id: currentBoard.value.id
+        })
+
+        resizeTextArea(thisInput)
+      },
+      closeCardDescriptionInput: (event) => {
+        event.target.value = currentCard.value.description
+        return event.target.blur()
+      },
+
+      // checkbox
+      progressBar: computed(() => {
+        if (currentCard.value.checkboxes) {
+          const value = Math.round(checked.value.length / checkboxes.value.length * 100) / 100
+          return checked.value.length === 0 ? 0 : value
+        }
+
+        return 0
+      }),
+      createCheckbox: () => {
+        if (checkboxName.value !== '') {
+          const checkbox = {
+            name: checkboxName.value,
+            checked: false
+          }
+
+          store.commit('boards/addCardCheckbox', {
+            checkbox,
+            listIndex: props.card.listIndex,
+            cardIndex: props.card.cardIndex,
+          })
+
+          store.dispatch('boards/updateBoard', {
+            lists: currentBoard.value.lists,
+            id: currentBoard.value.id
+          })
+
+
+          checkboxName.value = ''
+          showAddMenu.value = false
+        } else {
+          addCheckboxInput.value.focus();
+        }
+      },
+      closeAddCheckboxMenu: (event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          checkboxName.value = ''
+          showAddMenu.value = false
+        }
+      },
+      updateCheckboxName: (event, index) => {
+        let thisInput = event.target
+        const thisCheckbox = currentCard.value.checkboxes[index]
+
+        if (thisInput.value === '') {
+          thisInput.value = thisCheckbox.name
+        } else if (thisInput.value !== thisCheckbox.name) {
+          store.commit('boards/updateCardCheckbox', {
+            name: thisInput.value,
+            checkboxIndex: index,
+            listIndex: props.card.listIndex,
+            cardIndex: props.card.cardIndex,
+          })
+
+          store.dispatch('boards/updateBoard', {
+            lists: currentBoard.value.lists,
+            id: currentBoard.value.id
+          })
+        }
+      },
+      toggleCardCheckbox: (index) => {
+        let checkbox = checkboxes.value[index]
+
+        checkbox.checked = !checkbox.checked
+
+        const checked = checkboxes.value.filter(item => item.checked === true)
+
+        store.commit('boards/toggleCardCheckbox', {
+          listIndex: props.card.listIndex,
+          cardIndex: props.card.cardIndex,
+          checkboxes: checkboxes.value,
+          checklistCompleted: checkboxes.value.length === checked.length
+        })
+
+        store.dispatch('boards/updateBoard', {
+          lists: currentBoard.value.lists,
+          id: currentBoard.value.id
+        })
+      },
+      closeCheckboxNameInput: (event, index) => {
+        event.target.value = currentCard.value.checkboxes[index].name
+        return event.target.blur()
+      },
+      deleteCheckbox: (index) => {
+        store.commit('boards/deleteCardCheckbox', {
+          listIndex: props.card.listIndex,
+          cardIndex: props.card.cardIndex,
+          checkboxIndexToDelete: index,
+        })
+
+        store.dispatch('boards/updateBoard', {
+          lists: currentBoard.value.lists,
+          id: currentBoard.value.id
+        })
+        /*    console.log(checkboxNameInputs.value)
+            checkboxNameInputs.value.splice(index, 1)
+            console.log(checkboxNameInputs.value)*/
+      },
+
+      onClose: () => {
+        // reset checkbox refs array
+        // checkboxNameInputs.value = []
+        emit('closeCardModal')
+      },
+      onShow: () => {
+        resizeTextArea(cardNameInput.value)
+        resizeTextArea(cardDescriptionInput.value)
+        // checkboxNameInputs.value.forEach(checkbox => resizeTextArea(checkbox))
+      },
+
+      addCheckboxInput,
+      showAddMenu,
+      checkboxName,
+      checkboxNameInputs,
+      cardDescriptionInput,
       cardNameInput,
       checked,
       checkboxes,
@@ -243,21 +435,41 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.card-textarea {
+  padding-left: 0.5rem;
+  padding-block: 0.3rem;
+  padding-right: 0.5rem;
+  cursor: pointer;
+  width: 100%;
+  color: $blue-grey-8;
+  font-weight: bold;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  word-wrap: break-word;
+  resize: none;
+  overflow: hidden;
+  height: fit-content;
+
+  &:focus {
+    box-shadow: inset 0 0 0 2px $primary;
+    border-radius: 3px;
+    border: none;
+    outline: none;
+    background-color: white;
+    cursor: text;
+  }
+}
+
 .card-wrapper {
-  min-width: 500px;
+  min-width: 600px;
   padding-inline: 0.8rem;
   font-size: 1rem;
 
-  /*  .btn-delete-card {
-      right: 2.5rem;
-      font-size: 0.8rem;
-      top: 1px;
-    }*/
-
   .btn-delete-card {
-    right: 2.5rem;
+    right: 2rem;
     font-size: 0.8rem;
-    top: 0.2rem;
+    top: 4px;
   }
 
   .btn-close-modal {
@@ -274,86 +486,100 @@ export default {
     margin-left: 2rem;
     padding-inline: 0;
     padding-top: 0.8rem;
-    padding-bottom: 1rem;
+    padding-bottom: 0.8rem;
 
     .q-icon {
-      top: 1.25rem;
+      top: 1.05rem;
       left: -2rem;
     }
 
     .card-name-input {
-      padding-left: 0.5rem;
-      padding-block: 0.3rem;
-      padding-right: 0.5rem;
-      cursor: pointer;
-      width: 23rem;
-      color: $grey-9;
-      font-weight: bold;
-      background-color: transparent;
-      border: none;
-      outline: none;
-      word-wrap: break-word;
-      resize: none;
-      overflow: hidden;
-      height: fit-content;
-
-      &:focus {
-        box-shadow: inset 0 0 0 2px $primary;
-        border-radius: 3px;
-        border: none;
-        outline: none;
-        color: $blue-grey-9;
-        background-color: white;
-        cursor: text;
-      }
+      //width: 24rem;
+      width: 30rem;
     }
-
-    /* ::v-deep(.card-name-input) {
-       textarea {
-         font-size: 1rem;
-         padding-inline: 0.5rem;
-         cursor: pointer;
-         width: 23rem;
-         color: $blue-grey-8;
-         font-weight: bold;
-         background-color: transparent;
-         border: none;
-         outline: none;
-         word-wrap: break-word;
-         resize: none;
-         overflow: hidden;
-
-         &:focus {
-           box-shadow: inset 0 0 0 2px $primary;
-           border-radius: 3px;
-           border: none;
-           outline: none;
-           color: $blue-grey-9;
-           background-color: white;
-           cursor: text;
-         }
-       }
-     }*/
   }
 
   .content {
     padding-top: 0;
+    padding-bottom: 1.2rem;
     padding-inline: 0;
 
     .description-wrapper {
-      padding-inline: 0;
-      padding-left: 2.5rem;
+      //padding-left: 2.5rem;
+      padding-inline: 2.5rem;
 
       .description-title {
         margin-bottom: 0.8rem;
       }
 
       .q-icon {
-        top: -0.05rem;
+        //top: -0.05rem;
+      }
+
+      .card-description-input {
+        background-color: rgba(9, 30, 66, 0.06);
+        color: $blue-grey-10;
+        border-radius: 3px;
+        min-height: 3.2rem;
+        width: 100%;
+        font-size: 0.9rem;
+        font-weight: normal;
+
+        &:hover {
+          background-color: #091E4212;
+        }
+
+        &:focus {
+          background-color: white;
+        }
+      }
+
+      textarea::placeholder {
+        color: $blue-grey-9;
       }
     }
 
     .checklist-wrapper {
+      margin-right: 1.8rem;
+      //margin-right: 2.5rem;
+
+      .checkbox-wrapper {
+        //margin-left: 2px;
+        margin-left: -0.45rem;
+        transition: background-color 0.3s;
+
+        &:hover {
+          background-color: rgba(9, 30, 66, 0.06);
+        }
+
+        .checkbox {
+          margin-top: 0;
+          margin-right: 0;
+          margin-left: 0.6rem;
+          width: 1.3rem;
+          height: 1.3rem;
+
+          &:hover {
+            cursor: pointer;
+          }
+        }
+
+        //if checkbox is checked draw a line through the text
+        input[aria-checked=true] ~ textarea {
+          text-decoration: line-through;
+        }
+
+        textarea {
+          margin-left: 0.7rem;
+          //width: 30%;
+        }
+
+        .btn-delete {
+          color: $blue-grey-7;
+          //margin-right: -1rem;
+          font-size: 0.8rem;
+        }
+      }
 
       .checklist-title-wrapper {
         margin-block: 1rem;
@@ -374,36 +600,122 @@ export default {
 
       .progress-bar {
         margin-left: 2.55rem;
-        width: 27rem;
+        //width: 27rem;
+        width: 31rem;
       }
 
       ::v-deep(.checkbox) {
-        margin-top: 0.8rem;
         margin-left: 1px;
+        margin-right: 2.5rem;
         font-size: 1rem;
-        margin-block: 0.5rem;
+        margin-top: 0.3rem;
+        //pointer-events: none;
 
         .q-checkbox__label {
           font-size: 0.9rem;
-          width: 100%;
-          margin-left: 1rem;
+          width: 91%;
+          margin-left: 0.6rem;
           padding-left: 0.1rem;
+          align-items: center;
+          display: flex;
+        }
 
-          span {
-            width: 100%;
-          }
+        .card-checkbox-input {
+          pointer-events: auto;
+          height: 100%;
+          width: 100%;
+          //width: 26rem;
+          //width: 94%;
         }
 
         //if checkbox is checked draw a line through the text
-        .q-checkbox__inner--truthy ~ .q-checkbox__label > div {
+        .q-checkbox__inner--truthy ~ .q-checkbox__label > textarea {
           text-decoration: line-through;
         }
 
-        .btn-delete {
-          color: $blue-grey-7;
-          top: -0.2rem;
-          right: -0.3rem;
-          font-size: 0.8rem;
+        /*   .btn-delete {
+             color: $blue-grey-7;
+             right: -0.6rem;
+             font-size: 0.8rem;
+           }*/
+      }
+
+      .add-checkbox-wrapper {
+        margin-top: 0.8rem;
+        //margin-left: 2.5rem;
+        margin-inline: 2.5rem;
+
+        .btn-add-checkbox {
+          font-size: 0.9rem;
+          padding-inline: 0.5rem;
+          margin-bottom: 0;
+          text-transform: none;
+          background-color: rgba(9, 30, 66, 0.06);
+          color: $blue-grey-10;
+          font-weight: normal;
+
+          &:hover {
+            background-color: #091E4212;
+          }
+        }
+
+        .add-checkbox-menu {
+          margin: 0;
+
+          ::v-deep(.add-checkbox-input) {
+            margin-bottom: 0.3rem;
+
+            textarea {
+              padding-left: 0.5rem;
+              padding-block: 0.5rem;
+              padding-right: 0.5rem;
+              cursor: pointer;
+              width: 100%;
+              color: $blue-grey-10;
+              font-weight: normal;
+              background-color: transparent;
+              border: none;
+              outline: none;
+              word-wrap: break-word;
+              resize: none;
+              overflow: hidden;
+              height: fit-content;
+
+              &:focus {
+                box-shadow: inset 0 0 0 2px $primary;
+                border-radius: 3px;
+                border: none;
+                outline: none;
+                background-color: white;
+                cursor: text;
+              }
+
+              &::placeholder {
+                font-weight: normal;
+                color: black;
+              }
+            }
+          }
+
+          .btn-checkbox-actions {
+            font-weight: normal;
+            text-transform: none;
+            font-size: 0.9rem;
+            align-items: center;
+          }
+
+          .btn-checkbox-submit {
+            font-size: 0.9rem;
+            padding-inline: 0.7rem;
+          }
+
+          .btn-checkbox-cancel {
+            margin-left: 0.1rem;
+
+            & :hover {
+              background-color: transparent;
+            }
+          }
         }
       }
     }

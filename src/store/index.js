@@ -2,7 +2,6 @@ import {store} from 'quasar/wrappers'
 import {createStore} from 'vuex'
 import boards from './boards'
 import lists from './lists'
-import cards from './cards'
 import mainStore from './store'
 
 /*
@@ -20,7 +19,6 @@ export default store(function (/* { ssrContext } */) {
       mainStore,
       boards,
       lists,
-      cards
     },
 
     // enable strict mode (adds overhead!)

@@ -23,6 +23,7 @@ const state = {
 }
 
 const mutations = {
+  //boards
   setBoardsListener(state, payload) {
     state.boardsListener = payload
   },
@@ -47,12 +48,12 @@ const mutations = {
       state.currentBoard = state.boards.find(board => board.slug === payload.slug)
     }
   },
+  clearBoardsData(state) {
+    state.currentBoard = {};
+    state.boards = [];
+  },
 
-  /*  addList(state, payload) {
-      const board = state.boards.find(board => board.id === state.currentBoard.id)
-      board.lists.push(payload)
-    },*/
-
+  //lists
   moveList(state, payload) {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     const listToMove = board.lists.splice(payload.fromListIndex, 1)[0]
@@ -63,6 +64,7 @@ const mutations = {
     board.lists[payload.index] = payload.list
   },
 
+  //cards
   addCard(state, payload) {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     const list = board.lists.find(list => list.id === payload.list_id)
@@ -73,7 +75,6 @@ const mutations = {
     board.lists[payload.fromListIndex].cards.splice(payload.cardIndex, 1)
     board.lists[payload.toListIndex].cards.splice(payload.targetCardIndex, 0, payload.card)
   },
-
   updateCard(state, payload) {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     const card = board.lists[payload.listIndex].cards[payload.cardIndex]
@@ -81,31 +82,57 @@ const mutations = {
     if (payload.name)
       card.name = payload.name
 
-    if (payload.description)
+    if (payload.description !== undefined)
       card.description = payload.description
-
-    //toggle checkboxes
-    if (payload.checkboxes)
-      card.checkboxes = payload.checkboxes
-
-    //delete checkbox
-    if (payload.checkboxIndexToDelete !== undefined)
-      card.checkboxes.splice(payload.checkboxIndexToDelete, 1)
-
-
-    //set if the checklist is completed: true/false
-    if (payload.checklistCompleted !== undefined)
-      card.checklistCompleted = payload.checklistCompleted
   },
-
   deleteCard(state, payload) {
     const board = state.boards.find(board => board.id === state.currentBoard.id)
     board.lists[payload.listIndex].cards.splice(payload.cardIndex, 1)
   },
 
-  clearBoardsData(state) {
-    state.currentBoard = {};
-    state.boards = [];
+  //card checkboxes
+  addCardCheckbox(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const card = board.lists[payload.listIndex].cards[payload.cardIndex]
+
+    if (card.checkboxes !== undefined) {
+      card.checkboxes.push(payload.checkbox)
+    } else {
+      card.checkboxes = []
+      card.checkboxes.push(payload.checkbox)
+    }
+
+    const checkboxesChecked = card.checkboxes.filter(item => item.checked === true)
+    //set if the checklist is completed: true/false
+    card.checklistCompleted = card.checkboxes.length === checkboxesChecked.length
+  },
+  updateCardCheckbox(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const card = board.lists[payload.listIndex].cards[payload.cardIndex]
+    card.checkboxes[payload.checkboxIndex].name = payload.name
+  },
+  toggleCardCheckbox(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const card = board.lists[payload.listIndex].cards[payload.cardIndex]
+
+    //toggle checkboxes
+    card.checkboxes = payload.checkboxes
+
+    //set if the checklist is completed: true/false
+    if (payload.checklistCompleted !== undefined)
+      card.checklistCompleted = payload.checklistCompleted
+  },
+  deleteCardCheckbox(state, payload) {
+    const board = state.boards.find(board => board.id === state.currentBoard.id)
+    const card = board.lists[payload.listIndex].cards[payload.cardIndex]
+
+    //delete checkbox
+    if (payload.checkboxIndexToDelete !== undefined)
+      card.checkboxes.splice(payload.checkboxIndexToDelete, 1)
+
+    const checkboxesChecked = card.checkboxes.filter(item => item.checked === true)
+    //set if the checklist is completed: true/false
+    card.checklistCompleted = card.checkboxes.length === checkboxesChecked.length
   }
 }
 
