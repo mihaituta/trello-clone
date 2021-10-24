@@ -17,8 +17,7 @@
 
     <q-footer bordered>
       <div class="footer-title text-center">This is a personal trello-clone project I created for my portfolio, it is
-        <b>not</b> for commercial
-        use.
+        <b>not</b> for commercial use.
       </div>
     </q-footer>
 

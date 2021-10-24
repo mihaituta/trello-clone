@@ -38,7 +38,6 @@
 <script>
 import {ref, computed} from "vue";
 import {useStore} from "vuex";
-import {v4 as uuidv4} from "uuid";
 
 export default {
   props: {
@@ -69,13 +68,10 @@ export default {
       createCard: () => {
         if (cardName.value !== '') {
 
-          const card = {
-            id: uuidv4(),
-            name: cardName.value,
-          }
-
           store.commit('boards/addCard', {
-            card,
+            card: {
+              name: cardName.value
+            },
             list_id: props.list.id
           })
 

@@ -139,7 +139,7 @@ export default {
       logoutUser: () => store.dispatch('mainStore/logoutUser'),
 
       goToBoard: (board) => {
-        router.push({name: 'board', params: {slug: board.slug}}).then(() => {
+        router.push({name: 'board', params: {urlId: board.urlId, slug: board.slug}}).then(() => {
             store.commit('boards/setCurrentBoard', {board})
           }
         );

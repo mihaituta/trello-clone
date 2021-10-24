@@ -11,12 +11,8 @@ import {
   deleteDoc,
   doc,
   query,
-  onSnapshot,
   orderBy,
-  runTransaction,
-  writeBatch,
-  limit,
-  where,
+  onSnapshot,
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore'
@@ -67,12 +63,8 @@ export {
   doc,
   collection,
   query,
-  onSnapshot,
   orderBy,
-  runTransaction,
-  writeBatch,
-  limit,
-  where,
+  onSnapshot,
   arrayUnion,
   arrayRemove
 }

@@ -49,14 +49,19 @@
 
             <span class="card-title">{{ card.name }}</span>
 
-            <div v-if="card.checkboxes && card.checkboxes.length > 0" class="checklist flex"
-                 v-bind:style="{backgroundColor: card.checklistCompleted ? '#61bd4f' : ''}">
-              <q-icon
-                v-bind:style="{color: card.checklistCompleted ? 'white' : ''}"
-                name="o_check_box"/>
-              <span
-                v-bind:style="{color: card.checklistCompleted ? 'white' : ''}"
-                class="checklist-numbers">{{ checklistStatus(card) }}</span>
+            <div class="row">
+              <div v-if="card.description" class="description-icon q-mr-sm">
+                <q-icon name="subject" size="xs"/>
+              </div>
+              <div v-if="card.checkboxes && card.checkboxes.length > 0" class="checklist flex"
+                   v-bind:style="{backgroundColor: card.checklistCompleted ? '#61bd4f' : ''}">
+                <q-icon
+                  v-bind:style="{color: card.checklistCompleted ? 'white' : ''}"
+                  name="o_check_box"/>
+                <span
+                  v-bind:style="{color: card.checklistCompleted ? 'white' : ''}"
+                  class="checklist-numbers">{{ checklistStatus(card) }}</span>
+              </div>
             </div>
 
           </q-card-section>
@@ -457,6 +462,7 @@ export default {
       }
 
       &:active {
+        background-color: white;
         cursor: move;
         cursor: grabbing;
       }
@@ -475,6 +481,10 @@ export default {
         font-size: 0.85rem;
         padding: 0;
         margin-bottom: 0.25rem;
+      }
+
+      .description-icon {
+        margin-bottom: 0.4rem;
       }
 
       .checklist {
@@ -497,5 +507,4 @@ export default {
     }
   }
 }
-
 </style>

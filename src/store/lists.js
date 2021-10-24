@@ -5,7 +5,7 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'boot/firebase'
-import {v4 as uuidv4} from 'uuid';
+import { nanoid } from 'nanoid'
 
 const actions = {
   async addList({rootGetters}, payload) {
@@ -16,7 +16,7 @@ const actions = {
     try {
       await updateDoc(boardsQuery, {
         lists: arrayUnion({
-          id: uuidv4(),
+          id: nanoid(20),
           name: payload,
           cards: [],
         })

@@ -12,7 +12,7 @@
 // to match your app's branding.
 // Tip: Use the "Theme Builder" on Quasar's documentation website.
 
-//nunito sans
+//nunito sans font
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@200;300;400;600;700;800&display=swap');
 
 $primary: hsl(202, 100%, 37%);
@@ -32,30 +32,3 @@ $typography-font-family: 'Nunito sans', sans-serif !default;
 // Fix font-weight values to match the imported font family weights
 $text-weights: (thin: 200, light: 300, regular: 400, medium: 600, bold: 700, bolder: 800) !default;
 $button-font-weight: 700;
-
-$trello-blue: hsl(202, 100%, 37%);
-.trello-blue{color: $trello-blue}
-
-$trello-light-blue: hsl(189, 100%, 40%);
-.trello-light-blue{color: $trello-light-blue}
-
-$trello-orange: hsl(35, 64%, 51%);
-.trello-orange{color: $trello-orange}
-
-$trello-green: hsl(105, 45%, 41%);
-.trello-green{color: $trello-green}
-
-$trello-light-green: hsl(137, 48%, 52%);
-.trello-light-green{color: $trello-light-green}
-
-$trello-red: hsl(10, 56%, 44%);
-.trello-red{color: $trello-red}
-
-$trello-purple: hsl(280, 24%, 50%);
-.trello-purple{color: $trello-purple}
-
-$trello-pink: hsl(331, 53%, 58%);
-.trello-pink{color: $trello-pink}
-
-$trello-grey: hsl(201, 6%, 54%);
-.trello-grey{color: $trello-grey}

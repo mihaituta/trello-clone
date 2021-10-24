@@ -2,17 +2,16 @@ import {
   fbDB,
   collection,
   query,
-  where,
   addDoc,
-  setDoc,
   updateDoc,
   deleteDoc,
   doc,
-  getDoc,
   getDocs,
-  onSnapshot, orderBy
+  onSnapshot,
+  orderBy
 } from 'boot/firebase'
 import {Notify} from 'quasar'
+import {nanoid} from 'nanoid'
 
 const slugify = require('slugify')
 
@@ -151,6 +150,7 @@ const actions = {
         const temp = {
           id,
           name: board.name,
+          urlId: board.urlId,
           slug: board.slug,
           color: board.color,
           lists: board.lists
@@ -181,6 +181,7 @@ const actions = {
             const data = {
               id,
               name: board.name,
+              urlId: board.urlId,
               slug: board.slug,
               color: board.color,
               lists: board.lists
@@ -209,6 +210,7 @@ const actions = {
         date: new Date().toISOString(),
         name: payload.name,
         color: payload.color,
+        urlId: nanoid(10),
         slug
       })
       Notify.create({

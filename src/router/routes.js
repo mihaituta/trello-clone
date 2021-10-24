@@ -5,7 +5,7 @@ const routes = [
     meta: {requiresAuth: true},
     children: [
       {name: 'home', path: '/', component: () => import('pages/Index')},
-      {name: 'board', path: '/board/:slug', component: () => import('pages/BoardPage')},
+      {name: 'board', path: '/b/:urlId/:slug', component: () => import('pages/BoardPage')},
     ]
   },
   {

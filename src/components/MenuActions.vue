@@ -74,7 +74,6 @@ export default {
   setup(props) {
     const store = useStore()
     const currentBoard = computed(() => store.getters["boards/currentBoard"])
-    // const showModal = ref(false)
     let showDeleteModal = ref(false)
 
     return {

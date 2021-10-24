@@ -1,33 +1,19 @@
 import {
-  fbApp,
   fbAuth,
   fbDB,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
-  collection,
-  query,
-  addDoc,
   setDoc,
-  updateDoc,
   getDoc,
-  getDocs,
-  deleteDoc,
   doc,
-  onSnapshot,
-  orderBy,
-  runTransaction,
-  writeBatch,
-  limit,
-  where
 } from 'boot/firebase'
 
 import {Notify} from "quasar";
 
 const state = {
   userDetails: {},
-  loadingStatus: true,
   backgroundColors: [
     '#0078BD',
     '#00ADCC',
@@ -190,7 +176,6 @@ const actions = {
 }
 
 const getters = {
-  loadingStatus: state => state.loadingStatus,
   user: state => state.userDetails,
   backgroundColors: state => state.backgroundColors,
   labelColors: state => state.labelColors
